@@ -146,10 +146,10 @@ public class MixinMinecraft {
     }
 
     @Inject(
-            method = "doAttack",
+            method = "doItemUse",
             at = @At(
                     value = "INVOKE",
-                    target = "net/minecraft/client/entity/player/ClientPlayerEntity.swingHand(Lnet/minecraft/util/Hand;)V"
+                    target = "net/minecraft/client/network/ClientPlayerEntity.swingHand(Lnet/minecraft/util/Hand;)V"
             ),
             locals = LocalCapture.CAPTURE_FAILHARD
     )
@@ -157,4 +157,6 @@ public class MixinMinecraft {
         // rightClickMouse is only for the main player
         BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().onBlockInteract(new BlockInteractEvent(raytrace.getBlockPos(), BlockInteractEvent.Type.USE));
     }
+
+
 }

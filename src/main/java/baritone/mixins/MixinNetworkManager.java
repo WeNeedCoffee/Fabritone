@@ -50,7 +50,7 @@ public class MixinNetworkManager {
     private NetworkSide side;
 
     @Inject(
-            method = "send",
+            method = "sendImmediately",
             at = @At("HEAD")
     )
     private void preDispatchPacket(Packet<?> inPacket, final GenericFutureListener<? extends Future<? super Void>> futureListeners, CallbackInfo ci) {
@@ -66,7 +66,7 @@ public class MixinNetworkManager {
     }
 
     @Inject(
-            method = "send",
+            method = "sendImmediately",
             at = @At("RETURN")
     )
     private void postDispatchPacket(Packet<?> inPacket, final GenericFutureListener<? extends Future<? super Void>> futureListeners, CallbackInfo ci) {
