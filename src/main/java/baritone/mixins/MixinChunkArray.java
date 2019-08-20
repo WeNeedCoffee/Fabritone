@@ -47,7 +47,7 @@ public abstract class MixinChunkArray implements IChunkArray {
     @Shadow
     protected abstract int index(int x, int z);
 
-    @Shadow(remap = false)
+    @Shadow
     protected abstract void unload(int index, WorldChunk chunk);
 
     @Override
