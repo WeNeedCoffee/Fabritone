@@ -19,7 +19,7 @@ package baritone.utils.schematic;
 
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.Tag;
 
 import java.util.OptionalInt;
 import java.util.function.Predicate;
@@ -28,7 +28,7 @@ public class MapArtSchematic extends Schematic {
 
     private final int[][] heightMap;
 
-    public MapArtSchematic(CompoundNBT schematic) {
+    public MapArtSchematic(Tag schematic) {
         super(schematic);
         heightMap = new int[widthX][lengthZ];
 

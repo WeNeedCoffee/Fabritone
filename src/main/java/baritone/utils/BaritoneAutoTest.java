@@ -24,20 +24,19 @@ import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.utils.Helper;
 import baritone.api.utils.IPlayerContext;
-import net.minecraft.client.GameSettings;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.MainMenuScreen;
-import net.minecraft.client.settings.AmbientOcclusionStatus;
-import net.minecraft.client.settings.CloudOption;
-import net.minecraft.client.settings.ParticleStatus;
-import net.minecraft.client.tutorial.TutorialSteps;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.options.AoOption;
+import net.minecraft.client.options.CloudRenderMode;
+import net.minecraft.client.options.GameOptions;
+import net.minecraft.client.options.ParticlesOption;
+import net.minecraft.client.tutorial.TutorialStep;
+import net.minecraft.client.util.NetworkUtils;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.util.HTTPUtil;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameType;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.WorldType;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.level.LevelGeneratorType;
+import net.minecraft.world.level.LevelInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,29 +61,26 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
     private static final Goal GOAL = new GoalBlock(69, 69, 420);
     private static final int MAX_TICKS = 3300;
 
-    /**
-     * Called right after the {@link GameSettings} object is created in the {@link Minecraft} instance.
-     */
     public void onPreInit() {
         if (!BaritoneAutoTest.ENABLE_AUTO_TEST) {
             return;
         }
         System.out.println("Optimizing Game Settings");
 
-        GameSettings s = mc.gameSettings;
-        s.framerateLimit = 20;
+        GameOptions s = mc.options;
+        s.maxFps = 20;
         s.mipmapLevels = 0;
-        s.particles = ParticleStatus.MINIMAL;
+        s.particles = ParticlesOption.MINIMAL;
         s.overrideWidth = 128;
         s.overrideHeight = 128;
         s.heldItemTooltips = false;
         s.entityShadows = false;
         s.chatScale = 0.0F;
-        s.ambientOcclusionStatus = AmbientOcclusionStatus.OFF;
-        s.cloudOption = CloudOption.OFF;
+        s.ao = AoOption.OFF;
+        s.cloudRenderMode = CloudRenderMode.OFF;
         s.fancyGraphics = false;
-        s.tutorialStep = TutorialSteps.NONE;
-        s.hideGUI = true;
+        s.tutorialStep = TutorialStep.NONE;
+        s.hudHidden = true;
         s.fov = 30.0F;
     }
 
@@ -92,21 +88,21 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
     public void onTick(TickEvent event) {
         IPlayerContext ctx = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext();
         // If we're on the main menu then create the test world and launch the integrated server
-        if (mc.currentScreen instanceof MainMenuScreen) {
+        if (mc.currentScreen instanceof TitleScreen) {
             System.out.println("Beginning Baritone automatic test routine");
-            mc.displayGuiScreen(null);
-            WorldSettings worldsettings = new WorldSettings(TEST_SEED, GameType.getByName("survival"), true, false, WorldType.DEFAULT);
-            mc.launchIntegratedServer("BaritoneAutoTest", "BaritoneAutoTest", worldsettings);
+            mc.openScreen(null);
+            LevelInfo worldsettings = new LevelInfo(TEST_SEED, GameMode.byName("survival"), true, false, LevelGeneratorType.DEFAULT);
+            mc.startIntegratedServer("BaritoneAutoTest", "BaritoneAutoTest", worldsettings);
         }
 
-        IntegratedServer server = mc.getIntegratedServer();
+        IntegratedServer server = mc.getServer();
 
         // If the integrated server is launched and the world has initialized, set the spawn point
         // to our defined starting position
         if (server != null && server.getWorld(DimensionType.OVERWORLD) != null) {
-            server.getWorld(DimensionType.OVERWORLD).setSpawnPoint(STARTING_POSITION);
-            server.getCommandManager().handleCommand(server.getCommandSource(), "/difficulty peaceful");
-            int result = server.getCommandManager().handleCommand(server.getCommandSource(), "/gamerule spawnRadius 0");
+            server.getWorld(DimensionType.OVERWORLD).setSpawnPos(STARTING_POSITION);
+            server.getCommandManager().execute(server.getCommandSource(), "/difficulty peaceful");
+            int result = server.getCommandManager().execute(server.getCommandSource(), "/gamerule spawnRadius 0");
             if (result != 0) {
                 throw new IllegalStateException(result + "");
             }
@@ -116,8 +112,8 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
 
             // Force the integrated server to share the world to LAN so that
             // the ingame pause menu gui doesn't actually pause our game
-            if (mc.isSingleplayer() && !mc.getIntegratedServer().getPublic()) {
-                mc.getIntegratedServer().shareToLAN(GameType.getByName("survival"), false, HTTPUtil.getSuitableLanPort());
+            if (mc.isInSingleplayer() && !mc.getServer().isRemote()) {
+                mc.getServer().openToLan(GameMode.byName("survival"), false, NetworkUtils.findLocalPort());
             }
 
             // For the first 200 ticks, wait for the world to generate
@@ -146,8 +142,7 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                mc.shutdown();
-                mc.shutdownMinecraftApplet();
+                mc.stop();
                 System.exit(0);
             }
 

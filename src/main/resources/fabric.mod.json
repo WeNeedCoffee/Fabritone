@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "fabritone",
+  "version": "1.0.0",
+  "name": "fabritone",
+  "description": "Baritone + Fabric",
+  "environment": "client",
+  "mixins": [
+    "fabritone.mixins.json"
+  ]
+}

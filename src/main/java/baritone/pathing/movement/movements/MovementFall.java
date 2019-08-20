@@ -38,8 +38,8 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.WaterFluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
@@ -96,12 +96,12 @@ public class MovementFall extends Movement {
         Block destBlock = destState.getBlock();
         boolean isWater = destState.getFluidState().getFluid() instanceof WaterFluid;
         if (!isWater && willPlaceBucket() && !playerFeet.equals(dest)) {
-            if (!PlayerInventory.isHotbar(ctx.player().inventory.getSlotFor(STACK_BUCKET_WATER)) || ctx.world().getDimension().isNether()) {
+            if (!PlayerInventory.isValidHotbarIndex(ctx.player().inventory.getSlotWithStack(STACK_BUCKET_WATER)) || ctx.world().getDimension().isNether()) {
                 return state.setStatus(MovementStatus.UNREACHABLE);
             }
 
-            if (ctx.player().posY - dest.getY() < ctx.playerController().getBlockReachDistance() && !ctx.player().onGround) {
-                ctx.player().inventory.currentItem = ctx.player().inventory.getSlotFor(STACK_BUCKET_WATER);
+            if (ctx.player().y - dest.getY() < ctx.playerController().getBlockReachDistance() && !ctx.player().onGround) {
+                ctx.player().inventory.selectedSlot = ctx.player().inventory.getSlotWithStack(STACK_BUCKET_WATER);
 
                 targetRotation = new Rotation(toDest.getYaw(), 90.0F);
 
@@ -115,17 +115,17 @@ public class MovementFall extends Movement {
         } else {
             state.setTarget(new MovementTarget(toDest, false));
         }
-        if (playerFeet.equals(dest) && (ctx.player().posY - playerFeet.getY() < 0.094 || isWater)) { // 0.094 because lilypads
+        if (playerFeet.equals(dest) && (ctx.player().y - playerFeet.getY() < 0.094 || isWater)) { // 0.094 because lilypads
             if (isWater) { // only match water, not flowing water (which we cannot pick up with a bucket)
-                if (PlayerInventory.isHotbar(ctx.player().inventory.getSlotFor(STACK_BUCKET_EMPTY))) {
-                    ctx.player().inventory.currentItem = ctx.player().inventory.getSlotFor(STACK_BUCKET_EMPTY);
-                    if (ctx.player().getMotion().y >= 0) {
+                if (PlayerInventory.isValidHotbarIndex(ctx.player().inventory.getSlotWithStack(STACK_BUCKET_EMPTY))) {
+                    ctx.player().inventory.selectedSlot = ctx.player().inventory.getSlotWithStack(STACK_BUCKET_EMPTY);
+                    if (ctx.player().getVelocity().y >= 0) {
                         return state.setInput(Input.CLICK_RIGHT, true);
                     } else {
                         return state;
                     }
                 } else {
-                    if (ctx.player().getMotion().y >= 0) {
+                    if (ctx.player().getVelocity().y >= 0) {
                         return state.setStatus(MovementStatus.SUCCESS);
                     } // don't else return state; we need to stay centered because this water might be flowing under the surface
                 }
@@ -134,17 +134,17 @@ public class MovementFall extends Movement {
             }
         }
         Vec3d destCenter = VecUtils.getBlockPosCenter(dest); // we are moving to the 0.5 center not the edge (like if we were falling on a ladder)
-        if (Math.abs(ctx.player().posX + ctx.player().getMotion().x - destCenter.x) > 0.1 || Math.abs(ctx.player().posZ + ctx.player().getMotion().z - destCenter.z) > 0.1) {
-            if (!ctx.player().onGround && Math.abs(ctx.player().getMotion().y) > 0.4) {
+        if (Math.abs(ctx.player().x + ctx.player().getVelocity().x - destCenter.x) > 0.1 || Math.abs(ctx.player().z + ctx.player().getVelocity().z - destCenter.z) > 0.1) {
+            if (!ctx.player().onGround && Math.abs(ctx.player().getVelocity().y) > 0.4) {
                 state.setInput(Input.SNEAK, true);
             }
             state.setInput(Input.MOVE_FORWARD, true);
         }
-        Vec3i avoid = Optional.ofNullable(avoid()).map(Direction::getDirectionVec).orElse(null);
+        Vec3i avoid = Optional.ofNullable(avoid()).map(Direction::getVector).orElse(null);
         if (avoid == null) {
             avoid = src.subtract(dest);
         } else {
-            double dist = Math.abs(avoid.getX() * (destCenter.x - avoid.getX() / 2.0 - ctx.player().posX)) + Math.abs(avoid.getZ() * (destCenter.z - avoid.getZ() / 2.0 - ctx.player().posZ));
+            double dist = Math.abs(avoid.getX() * (destCenter.x - avoid.getX() / 2.0 - ctx.player().x)) + Math.abs(avoid.getZ() * (destCenter.z - avoid.getZ() / 2.0 - ctx.player().z));
             if (dist < 0.6) {
                 state.setInput(Input.MOVE_FORWARD, true);
             } else if (!ctx.player().onGround) {

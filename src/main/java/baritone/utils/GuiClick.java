@@ -24,11 +24,17 @@ import baritone.api.pathing.goals.GoalTwoBlocks;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.Helper;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.VertexFormat;
 import net.minecraft.entity.Entity;
+import net.minecraft.text.LiteralText;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.shape.VoxelSet;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.RayTraceContext;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -51,7 +57,7 @@ public class GuiClick extends Screen implements Helper {
     private BlockPos currentMouseOver;
 
     public GuiClick() {
-        super(new StringTextComponent("CLICK"));
+        super(new LiteralText("CLICK"));
     }
 
     @Override
@@ -61,20 +67,20 @@ public class GuiClick extends Screen implements Helper {
 
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
-        double mx = mc.mouseHelper.getMouseX();
-        double my = mc.mouseHelper.getMouseY();
-        my = mc.mainWindow.getHeight() - my;
-        my *= mc.mainWindow.getFramebufferHeight() / (double) mc.mainWindow.getHeight();
-        mx *= mc.mainWindow.getFramebufferWidth() / (double) mc.mainWindow.getWidth();
+        double mx = mc.mouse.getX();
+        double my = mc.mouse.getY();
+        my = mc.window.getHeight() - my;
+        my *= mc.window.getFramebufferHeight() / (double) mc.window.getHeight();
+        mx *= mc.window.getFramebufferWidth() / (double) mc.window.getWidth();
         Vec3d near = toWorld(mx, my, 0);
         Vec3d far = toWorld(mx, my, 1); // "Use 0.945 that's what stack overflow says" - leijurv
         if (near != null && far != null) {
             ///
             Vec3d viewerPos = new Vec3d(PathRenderer.posX(), PathRenderer.posY(), PathRenderer.posZ());
             ClientPlayerEntity player = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().player();
-            RayTraceResult result = player.world.rayTraceBlocks(new RayTraceContext(near.add(viewerPos), far.add(viewerPos), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
-            if (result != null && result.getType() == RayTraceResult.Type.BLOCK) {
-                currentMouseOver = ((BlockRayTraceResult) result).getPos();
+            HitResult result = player.world.rayTrace(new RayTraceContext(near.add(viewerPos), far.add(viewerPos), RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, player));
+            if (result != null && result.getType() == HitResult.Type.BLOCK) {
+                currentMouseOver = ((BlockHitResult) result).getBlockPos();
             }
         }
     }
@@ -107,7 +113,7 @@ public class GuiClick extends Screen implements Helper {
         GL11.glGetIntegerv(GL_VIEWPORT, (IntBuffer) VIEWPORT.clear());
 
         if (currentMouseOver != null) {
-            Entity e = mc.getRenderViewEntity();
+            Entity e = mc.getCameraEntity();
             // drawSingleSelectionBox WHEN?
             PathRenderer.drawManySelectionBoxes(e, Collections.singletonList(currentMouseOver), Color.CYAN);
             if (clickStart != null && !clickStart.equals(currentMouseOver)) {
@@ -120,7 +126,7 @@ public class GuiClick extends Screen implements Helper {
                 GlStateManager.disableDepthTest();
                 BetterBlockPos a = new BetterBlockPos(currentMouseOver);
                 BetterBlockPos b = new BetterBlockPos(clickStart);
-                PathRenderer.drawAABB(new AxisAlignedBB(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z), Math.max(a.x, b.x) + 1, Math.max(a.y, b.y) + 1, Math.max(a.z, b.z) + 1));
+                PathRenderer.drawAABB(new Box(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z), Math.max(a.x, b.x) + 1, Math.max(a.y, b.y) + 1, Math.max(a.z, b.z) + 1));
                 GlStateManager.enableDepthTest();
 
                 GlStateManager.depthMask(true);

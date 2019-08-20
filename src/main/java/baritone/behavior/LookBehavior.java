@@ -72,24 +72,24 @@ public final class LookBehavior extends Behavior implements ILookBehavior {
         switch (event.getState()) {
             case PRE: {
                 if (this.force) {
-                    ctx.player().rotationYaw = this.target.getYaw();
-                    float oldPitch = ctx.player().rotationPitch;
+                    ctx.player().yaw = this.target.getYaw();
+                    float oldPitch = ctx.player().pitch;
                     float desiredPitch = this.target.getPitch();
-                    ctx.player().rotationPitch = desiredPitch;
+                    ctx.player().pitch = desiredPitch;
                     if (desiredPitch == oldPitch && !Baritone.settings().freeLook.value) {
                         nudgeToLevel();
                     }
                     this.target = null;
                 }
                 if (silent) {
-                    this.lastYaw = ctx.player().rotationYaw;
-                    ctx.player().rotationYaw = this.target.getYaw();
+                    this.lastYaw = ctx.player().yaw;
+                    ctx.player().yaw = this.target.getYaw();
                 }
                 break;
             }
             case POST: {
                 if (silent) {
-                    ctx.player().rotationYaw = this.lastYaw;
+                    ctx.player().yaw = this.lastYaw;
                     this.target = null;
                 }
                 break;
@@ -101,7 +101,7 @@ public final class LookBehavior extends Behavior implements ILookBehavior {
 
     public void pig() {
         if (this.target != null) {
-            ctx.player().rotationYaw = this.target.getYaw();
+            ctx.player().yaw = this.target.getYaw();
         }
     }
 
@@ -123,10 +123,10 @@ public final class LookBehavior extends Behavior implements ILookBehavior {
      * Nudges the player's pitch to a regular level. (Between {@code -20} and {@code 10}, increments are by {@code 1})
      */
     private void nudgeToLevel() {
-        if (ctx.player().rotationPitch < -20) {
-            ctx.player().rotationPitch++;
-        } else if (ctx.player().rotationPitch > 10) {
-            ctx.player().rotationPitch--;
+        if (ctx.player().pitch < -20) {
+            ctx.player().pitch++;
+        } else if (ctx.player().pitch > 10) {
+            ctx.player().pitch--;
         }
     }
 }

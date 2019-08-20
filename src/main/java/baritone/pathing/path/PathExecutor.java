@@ -32,8 +32,7 @@ import baritone.pathing.movement.Movement;
 import baritone.pathing.movement.MovementHelper;
 import baritone.pathing.movement.movements.*;
 import baritone.utils.BlockStateInterface;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.Tuple;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
@@ -127,10 +126,10 @@ public class PathExecutor implements IPathExecutor, Helper {
                 }
             }
         }
-        Tuple<Double, BlockPos> status = closestPathPos(path);
+        Pair<Double, BlockPos> status = closestPathPos(path);
         if (possiblyOffPath(status, MAX_DIST_FROM_PATH)) {
             ticksAway++;
-            System.out.println("FAR AWAY FROM PATH FOR " + ticksAway + " TICKS. Current distance: " + status.getA() + ". Threshold: " + MAX_DIST_FROM_PATH);
+            System.out.println("FAR AWAY FROM PATH FOR " + ticksAway + " TICKS. Current distance: " + status.getLeft() + ". Threshold: " + MAX_DIST_FROM_PATH);
             if (ticksAway > MAX_TICKS_AWAY) {
                 logDebug("Too far away from path for too long, cancelling path");
                 cancel();
@@ -254,7 +253,7 @@ public class PathExecutor implements IPathExecutor, Helper {
         return canCancel; // movement is in progress, but if it reports cancellable, PathingBehavior is good to cut onto the next path
     }
 
-    private Tuple<Double, BlockPos> closestPathPos(IPath path) {
+    private Pair<Double, BlockPos> closestPathPos(IPath path) {
         double best = -1;
         BlockPos bestPos = null;
         for (IMovement movement : path.movements()) {
@@ -266,7 +265,7 @@ public class PathExecutor implements IPathExecutor, Helper {
                 }
             }
         }
-        return new Tuple<>(best, bestPos);
+        return new Pair<>(best, bestPos);
     }
 
     private boolean shouldPause() {
@@ -302,8 +301,8 @@ public class PathExecutor implements IPathExecutor, Helper {
         return positions.contains(ctx.playerFeet());
     }
 
-    private boolean possiblyOffPath(Tuple<Double, BlockPos> status, double leniency) {
-        double distanceFromPath = status.getA();
+    private boolean possiblyOffPath(Pair<Double, BlockPos> status, double leniency) {
+        double distanceFromPath = status.getLeft();
         if (distanceFromPath > leniency) {
             // when we're midair in the middle of a fall, we're very far from both the beginning and the end, but we aren't actually off path
             if (path.movements().get(pathPosition) instanceof MovementFall) {
@@ -328,7 +327,7 @@ public class PathExecutor implements IPathExecutor, Helper {
             return false;
         } else {
             // we are either onGround or in liquid
-            if (ctx.player().getMotion().y < -0.1) {
+            if (ctx.player().getVelocity().y < -0.1) {
                 // if we are strictly moving downwards (not stationary)
                 // we could be falling through water, which could be unsafe to splice
                 return false; // so don't
@@ -414,7 +413,7 @@ public class PathExecutor implements IPathExecutor, Helper {
                 // playerFeet adds 0.1251 to account for soul sand
                 // farmland is 0.9375
                 // 0.07 is to account for farmland
-                if (ctx.player().posY >= center.getY() - 0.07) {
+                if (ctx.player().y >= center.getY() - 0.07) {
                     behavior.baritone.getInputOverrideHandler().setInputForceState(Input.JUMP, false);
                     return true;
                 }
@@ -424,9 +423,9 @@ public class PathExecutor implements IPathExecutor, Helper {
             }
         }
         if (current instanceof MovementFall) {
-            Tuple<Vec3d, BlockPos> data = overrideFall((MovementFall) current);
+            Pair<Vec3d, BlockPos> data = overrideFall((MovementFall) current);
             if (data != null) {
-                BetterBlockPos fallDest = new BetterBlockPos(data.getB());
+                BetterBlockPos fallDest = new BetterBlockPos(data.getRight());
                 if (!path.positions().contains(fallDest)) {
                     throw new IllegalStateException();
                 }
@@ -437,7 +436,7 @@ public class PathExecutor implements IPathExecutor, Helper {
                     return true;
                 }
                 clearKeys();
-                behavior.baritone.getLookBehavior().updateTarget(RotationUtils.calcRotationFromVec3d(ctx.playerHead(), data.getA(), ctx.playerRotations()), false);
+                behavior.baritone.getLookBehavior().updateTarget(RotationUtils.calcRotationFromVec3d(ctx.playerHead(), data.getLeft(), ctx.playerRotations()), false);
                 behavior.baritone.getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, true);
                 return true;
             }
@@ -445,7 +444,7 @@ public class PathExecutor implements IPathExecutor, Helper {
         return false;
     }
 
-    private Tuple<Vec3d, BlockPos> overrideFall(MovementFall movement) {
+    private Pair<Vec3d, BlockPos> overrideFall(MovementFall movement) {
         Vec3i dir = movement.getDirection();
         if (dir.getY() < -3) {
             return null;
@@ -479,13 +478,13 @@ public class PathExecutor implements IPathExecutor, Helper {
             return null; // no valid extension exists
         }
         double len = i - pathPosition - 0.4;
-        return new Tuple<>(
+        return new Pair<>(
                 new Vec3d(flatDir.getX() * len + movement.getDest().x + 0.5, movement.getDest().y, flatDir.getZ() * len + movement.getDest().z + 0.5),
                 movement.getDest().add(flatDir.getX() * (i - pathPosition), 0, flatDir.getZ() * (i - pathPosition)));
     }
 
     private static boolean skipNow(IPlayerContext ctx, IMovement current) {
-        double offTarget = Math.abs(current.getDirection().getX() * (current.getSrc().z + 0.5D - ctx.player().posZ)) + Math.abs(current.getDirection().getZ() * (current.getSrc().x + 0.5D - ctx.player().posX));
+        double offTarget = Math.abs(current.getDirection().getX() * (current.getSrc().z + 0.5D - ctx.player().z)) + Math.abs(current.getDirection().getZ() * (current.getSrc().x + 0.5D - ctx.player().x));
         if (offTarget > 0.1) {
             return false;
         }
@@ -495,7 +494,7 @@ public class PathExecutor implements IPathExecutor, Helper {
             return true;
         }
         // wait 0.3
-        double flatDist = Math.abs(current.getDirection().getX() * (headBonk.getX() + 0.5D - ctx.player().posX)) + Math.abs(current.getDirection().getZ() * (headBonk.getZ() + 0.5 - ctx.player().posZ));
+        double flatDist = Math.abs(current.getDirection().getX() * (headBonk.getX() + 0.5D - ctx.player().x)) + Math.abs(current.getDirection().getZ() * (headBonk.getZ() + 0.5 - ctx.player().z));
         return flatDist > 0.8;
     }
 

@@ -27,14 +27,13 @@ import baritone.pathing.movement.MovementState.MovementTarget;
 import baritone.utils.BlockStateInterface;
 import baritone.utils.ToolSet;
 import net.minecraft.block.*;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.fluid.*;
-import net.minecraft.pathfinding.PathType;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.properties.SlabType;
-import net.minecraft.util.Direction;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Optional;
@@ -51,7 +50,7 @@ public interface MovementHelper extends ActionCosts, Helper {
     static boolean avoidBreaking(BlockStateInterface bsi, int x, int y, int z, BlockState state) {
         Block b = state.getBlock();
         return b == Blocks.ICE // ice becomes water, and water can mess up the path
-                || b instanceof SilverfishBlock // obvious reasons
+                || b instanceof InfestedBlock // obvious reasons
                 // call context.get directly with x,y,z. no need to make 5 new BlockPos for no reason
                 || avoidAdjacentBreaking(bsi, x, y + 1, z, true)
                 || avoidAdjacentBreaking(bsi, x + 1, y, z, false)
@@ -89,7 +88,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         if (block instanceof AirBlock) { // early return for most common case
             return true;
         }
-        if (block == Blocks.FIRE || block == Blocks.TRIPWIRE || block == Blocks.COBWEB || block == Blocks.END_PORTAL || block == Blocks.COCOA || block instanceof AbstractSkullBlock || block == Blocks.BUBBLE_COLUMN || block instanceof ShulkerBoxBlock || block instanceof SlabBlock || block instanceof TrapDoorBlock) {
+        if (block == Blocks.FIRE || block == Blocks.TRIPWIRE || block == Blocks.COBWEB || block == Blocks.END_PORTAL || block == Blocks.COCOA || block instanceof AbstractSkullBlock || block == Blocks.BUBBLE_COLUMN || block instanceof ShulkerBoxBlock || block instanceof SlabBlock || block instanceof TrapdoorBlock) {
             return false;
         }
         if (Baritone.settings().blocksToAvoid.value.contains(block)) {
@@ -123,7 +122,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         if (isFlowing(x, y, z, state, bsi)) {
             return false; // Don't walk through flowing liquids
         }
-        IFluidState fluidState = state.getFluidState();
+        FluidState fluidState = state.getFluidState();
         if (fluidState.getFluid() instanceof WaterFluid) {
             if (Baritone.settings().assumeWalkOnWater.value) {
                 return false;
@@ -137,7 +136,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         // every block that overrides isPassable with anything more complicated than a "return true;" or "return false;"
         // has already been accounted for above
         // therefore it's safe to not construct a blockpos from our x, y, z ints and instead just pass null
-        return state.allowsMovement(null, BlockPos.ZERO, PathType.LAND); // workaround for future compatibility =P
+        return state.canPlaceAtSide(null, BlockPos.ORIGIN, BlockPlacementEnvironment.LAND); // workaround for future compatibility =P
     }
 
     /**
@@ -170,14 +169,14 @@ public interface MovementHelper extends ActionCosts, Helper {
                 || block instanceof FenceGateBlock
                 || block instanceof SnowBlock
                 || !state.getFluidState().isEmpty()
-                || block instanceof TrapDoorBlock
+                || block instanceof TrapdoorBlock
                 || block instanceof EndPortalBlock
                 || block instanceof SkullBlock
                 || block instanceof ShulkerBoxBlock) {
             return false;
         }
         // door, fence gate, liquid, trapdoor have been accounted for, nothing else uses the world or pos parameters
-        return state.allowsMovement(null, null, PathType.LAND);
+        return state.canPlaceAtSide(null, null, BlockPlacementEnvironment.LAND);
     }
 
     static boolean isReplacable(int x, int y, int z, BlockState state, BlockStateInterface bsi) {
@@ -240,7 +239,7 @@ public interface MovementHelper extends ActionCosts, Helper {
             return false;
         }
 
-        Direction.Axis facing = blockState.get(HorizontalBlock.HORIZONTAL_FACING).getAxis();
+        Direction.Axis facing = blockState.get(HorizontalFacingBlock.FACING).getAxis();
         boolean open = blockState.get(propertyOpen);
 
         Direction.Axis playerFacing;
@@ -421,14 +420,14 @@ public interface MovementHelper extends ActionCosts, Helper {
      * @param ts  previously calculated ToolSet
      */
     static void switchToBestToolFor(IPlayerContext ctx, BlockState b, ToolSet ts) {
-        ctx.player().inventory.currentItem = ts.getBestSlot(b.getBlock());
+        ctx.player().inventory.selectedSlot = ts.getBestSlot(b.getBlock());
     }
 
     static void moveTowards(IPlayerContext ctx, MovementState state, BlockPos pos) {
         state.setTarget(new MovementTarget(
                 new Rotation(RotationUtils.calcRotationFromVec3d(ctx.playerHead(),
                         VecUtils.getBlockPosCenter(pos),
-                        ctx.playerRotations()).getYaw(), ctx.player().rotationPitch),
+                        ctx.playerRotations()).getYaw(), ctx.player().pitch),
                 false
         )).setInput(Input.MOVE_FORWARD, true);
     }
@@ -478,14 +477,14 @@ public interface MovementHelper extends ActionCosts, Helper {
     }
 
     static boolean possiblyFlowing(BlockState state) {
-        IFluidState fluidState = state.getFluidState();
-        return fluidState.getFluid() instanceof FlowingFluid
+        FluidState fluidState = state.getFluidState();
+        return fluidState.getFluid() instanceof BaseFluid
                 && fluidState.getFluid().getLevel(fluidState) != 8;
     }
 
     static boolean isFlowing(int x, int y, int z, BlockState state, BlockStateInterface bsi) {
-        IFluidState fluidState = state.getFluidState();
-        if (!(fluidState.getFluid() instanceof FlowingFluid)) {
+        FluidState fluidState = state.getFluidState();
+        if (!(fluidState.getFluid() instanceof BaseFluid)) {
             return false;
         }
         if (fluidState.getFluid().getLevel(fluidState) != 8) {
@@ -500,12 +499,12 @@ public interface MovementHelper extends ActionCosts, Helper {
     static boolean isBlockNormalCube(BlockState state) {
         Block block = state.getBlock();
         if (block instanceof BambooBlock
-                || block instanceof MovingPistonBlock
+                || block instanceof PistonExtensionBlock
                 || block instanceof ScaffoldingBlock
                 || block instanceof ShulkerBoxBlock) {
             return false;
         }
-        return Block.isOpaque(state.getCollisionShape(null, null));
+        return Block.isShapeFullCube(state.getCollisionShape(null, null));
     }
 
     static PlaceResult attemptToPlaceABlock(MovementState state, IBaritone baritone, BlockPos placeAt, boolean preferDown) {
@@ -528,8 +527,8 @@ public interface MovementHelper extends ActionCosts, Helper {
                 double faceY = (placeAt.getY() + against1.getY() + 0.5D) * 0.5D;
                 double faceZ = (placeAt.getZ() + against1.getZ() + 1.0D) * 0.5D;
                 Rotation place = RotationUtils.calcRotationFromVec3d(ctx.playerHead(), new Vec3d(faceX, faceY, faceZ), ctx.playerRotations());
-                RayTraceResult res = RayTraceUtils.rayTraceTowards(ctx.player(), place, ctx.playerController().getBlockReachDistance());
-                if (res != null && res.getType() == RayTraceResult.Type.BLOCK && ((BlockRayTraceResult) res).getPos().equals(against1) && ((BlockRayTraceResult) res).getPos().offset(((BlockRayTraceResult) res).getFace()).equals(placeAt)) {
+                HitResult res = RayTraceUtils.rayTraceTowards(ctx.player(), place, ctx.playerController().getBlockReachDistance());
+                if (res != null && res.getType() == HitResult.Type.BLOCK && ((BlockHitResult) res).getBlockPos().equals(against1) && ((BlockHitResult) res).getBlockPos().offset(((BlockHitResult) res).getSide()).equals(placeAt)) {
                     state.setTarget(new MovementState.MovementTarget(place, true));
                     found = true;
 
@@ -543,7 +542,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         }
         if (ctx.getSelectedBlock().isPresent()) {
             BlockPos selectedBlock = ctx.getSelectedBlock().get();
-            Direction side = ((BlockRayTraceResult) ctx.objectMouseOver()).getFace();
+            Direction side = ((BlockHitResult) ctx.objectMouseOver()).getSide();
             // only way for selectedBlock.equals(placeAt) to be true is if it's replacable
             if (selectedBlock.equals(placeAt) || (MovementHelper.canPlaceAgainst(ctx, selectedBlock) && selectedBlock.offset(side).equals(placeAt))) {
                 ((Baritone) baritone).getInventoryBehavior().selectThrowawayForLocation(true, placeAt.getX(), placeAt.getY(), placeAt.getZ());

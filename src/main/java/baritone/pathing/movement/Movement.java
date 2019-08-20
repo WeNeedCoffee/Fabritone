@@ -25,10 +25,10 @@ import baritone.api.utils.*;
 import baritone.api.utils.input.Input;
 import baritone.behavior.PathingBehavior;
 import baritone.utils.BlockStateInterface;
-import net.minecraft.entity.item.FallingBlockEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 
 import java.util.*;
 
@@ -122,12 +122,12 @@ public abstract class Movement implements IMovement, MovementHelper {
      */
     @Override
     public MovementStatus update() {
-        ctx.player().abilities.isFlying = false;
+        ctx.player().abilities.flying = false;
         currentState = updateState(currentState);
         if (MovementHelper.isLiquid(ctx, ctx.playerFeet())) {
             currentState.setInput(Input.JUMP, true);
         }
-        if (ctx.player().isEntityInsideOpaqueBlock()) {
+        if (ctx.player().isInsideWall()) {
             ctx.getSelectedBlock().ifPresent(pos -> MovementHelper.switchToBestToolFor(ctx, BlockStateInterface.get(ctx, pos)));
             currentState.setInput(Input.CLICK_LEFT, true);
         }
@@ -157,7 +157,7 @@ public abstract class Movement implements IMovement, MovementHelper {
         }
         boolean somethingInTheWay = false;
         for (BetterBlockPos blockPos : positionsToBreak) {
-            if (!ctx.world().getEntitiesWithinAABB(FallingBlockEntity.class, new AxisAlignedBB(0, 0, 0, 1, 1.1, 1).offset(blockPos)).isEmpty() && Baritone.settings().pauseMiningForFallingBlocks.value) {
+            if (!ctx.world().getEntities(FallingBlockEntity.class, new Box(0, 0, 0, 1, 1.1, 1).offset(blockPos)).isEmpty() && Baritone.settings().pauseMiningForFallingBlocks.value) {
                 return false;
             }
             if (!MovementHelper.canWalkThrough(ctx, blockPos)) { // can't break air, so don't try
@@ -176,7 +176,7 @@ public abstract class Movement implements IMovement, MovementHelper {
                 //i'm doing it anyway
                 //i dont care if theres snow in the way!!!!!!!
                 //you dont own me!!!!
-                state.setTarget(new MovementState.MovementTarget(RotationUtils.calcRotationFromVec3d(ctx.player().getEyePosition(1.0F),
+                state.setTarget(new MovementState.MovementTarget(RotationUtils.calcRotationFromVec3d(ctx.player().getCameraPosVec(1.0F),
                         VecUtils.getBlockPosCenter(blockPos), ctx.playerRotations()), true)
                 );
                 // don't check selectedblock on this one, this is a fallback when we can't see any face directly, it's intended to be breaking the "incorrect" block

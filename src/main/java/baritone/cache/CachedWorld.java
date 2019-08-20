@@ -26,7 +26,7 @@ import baritone.api.utils.Helper;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.WorldChunk;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +56,7 @@ public final class CachedWorld implements ICachedWorld, Helper {
      */
     private final String directory;
 
-    private final LinkedBlockingQueue<Chunk> toPack = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<WorldChunk> toPack = new LinkedBlockingQueue<>();
 
     private final int dimension;
 
@@ -88,7 +88,7 @@ public final class CachedWorld implements ICachedWorld, Helper {
     }
 
     @Override
-    public final void queueForPacking(Chunk chunk) {
+    public final void queueForPacking(WorldChunk chunk) {
         try {
             toPack.put(chunk);
         } catch (InterruptedException e) {
@@ -291,12 +291,12 @@ public final class CachedWorld implements ICachedWorld, Helper {
         public void run() {
             while (true) {
                 // TODO: Add CachedWorld unloading to remove the redundancy of having this
-                LinkedBlockingQueue<Chunk> queue = toPack;
+                LinkedBlockingQueue<WorldChunk> queue = toPack;
                 if (queue == null) {
                     break;
                 }
                 try {
-                    Chunk chunk = queue.take();
+                    WorldChunk chunk = queue.take();
                     CachedChunk cached = ChunkPacker.pack(chunk);
                     CachedWorld.this.updateCachedChunk(cached);
                     //System.out.println("Processed chunk at " + chunk.x + "," + chunk.z);

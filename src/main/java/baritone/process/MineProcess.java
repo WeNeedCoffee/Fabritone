@@ -34,17 +34,23 @@ import baritone.pathing.movement.MovementHelper;
 import baritone.utils.BaritoneProcessHelper;
 import baritone.utils.BlockStateInterface;
 import net.minecraft.block.*;
+import net.minecraft.client.resource.ClientResourcePackCreator;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.resources.*;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resource.*;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.storage.loot.*;
+import net.minecraft.world.loot.LootManager;
+import net.minecraft.world.loot.LootTables;
+import net.minecraft.world.loot.context.LootContext;
+import net.minecraft.world.loot.context.LootContextParameter;
+import net.minecraft.world.loot.context.LootContextParameters;
+import net.minecraft.world.loot.context.LootContextTypes;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -69,7 +75,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
     private int desiredQuantity;
     private int tickCount;
 
-    private static LootTableManager manager;
+    private static LootManager manager;
     private static Map<Block, List<Item>> drops = new HashMap<>();
 
     public MineProcess(Baritone baritone) {
@@ -85,7 +91,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
         if (desiredQuantity > 0) {
             List<Item> item = drops(mining.get(0));
-            int curr = ctx.player().inventory.mainInventory.stream().filter(stack -> item.contains(stack.getItem())).mapToInt(ItemStack::getCount).sum();
+            int curr = ctx.player().inventory.main.stream().filter(stack -> item.contains(stack.getItem())).mapToInt(ItemStack::getCount).sum();
             System.out.println("Currently have " + curr + " " + item);
             if (curr >= desiredQuantity) {
                 logDirect("Have " + curr);
@@ -96,7 +102,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         if (calcFailed) {
             if (!knownOreLocations.isEmpty() && Baritone.settings().blacklistClosestOnFailure.value) {
                 logDirect("Unable to find any path to " + mining + ", blacklisting presumably unreachable closest instance...");
-                knownOreLocations.stream().min(Comparator.comparingDouble(ctx.playerFeet()::distanceSq)).ifPresent(blacklist::add);
+                knownOreLocations.stream().min(Comparator.comparingDouble(ctx.playerFeet()::getSquaredDistance)).ifPresent(blacklist::add);
                 knownOreLocations.removeIf(blacklist::contains);
             } else {
                 logDirect("Unable to find any path to " + mining + ", canceling Mine");
@@ -122,7 +128,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
                 .filter(pos -> pos.getX() == ctx.playerFeet().getX() && pos.getZ() == ctx.playerFeet().getZ())
                 .filter(pos -> pos.getY() >= ctx.playerFeet().getY())
                 .filter(pos -> !(BlockStateInterface.get(ctx, pos).getBlock() instanceof AirBlock)) // after breaking a block, it takes mineGoalUpdateInterval ticks for it to actually update this list =(
-                .min(Comparator.comparingDouble(ctx.playerFeet()::distanceSq));
+                .min(Comparator.comparingDouble(ctx.playerFeet()::getSquaredDistance));
         baritone.getInputOverrideHandler().clearAllKeys();
         if (shaft.isPresent() && ctx.player().onGround) {
             BlockPos pos = shaft.get();
@@ -149,17 +155,17 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         return command;
     }
 
-    public static LootTableManager getManager() {
+    public static LootManager getManager() {
         if (manager == null) {
-            ResourcePackList rpl = new ResourcePackList<>(ResourcePackInfo::new);
-            rpl.addPackFinder(new ServerPackFinder());
-            rpl.reloadPacksFromFinders();
-            IResourcePack thePack = ((ResourcePackInfo) rpl.getAllPacks().iterator().next()).getResourcePack();
-            IReloadableResourceManager resourceManager = new SimpleReloadableResourceManager(ResourcePackType.SERVER_DATA, null);
-            manager = new LootTableManager();
-            resourceManager.addReloadListener(manager);
+            ResourcePackContainerManager rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
+            rpl.addCreator(new DefaultResourcePackCreator());
+            rpl.callCreators();
+            ResourcePack thePack = ((ResourcePackContainer) rpl.getAlphabeticallyOrderedContainers().iterator().next()).createResourcePack();
+            ReloadableResourceManager resourceManager = new ReloadableResourceManagerImpl(ResourceType.SERVER_DATA, null);
+            manager = new LootManager();
+            resourceManager.registerListener(manager);
             try {
-                resourceManager.reloadResourcesAndThen(Baritone.getExecutor(), Baritone.getExecutor(), Collections.singletonList(thePack), CompletableFuture.completedFuture(Unit.INSTANCE)).get();
+                resourceManager.beginReload(Baritone.getExecutor(), Baritone.getExecutor(), Collections.singletonList(thePack), CompletableFuture.completedFuture(Unit.INSTANCE)).get();
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }
@@ -169,11 +175,11 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
     private static List<Item> drops(Block b) {
         return drops.computeIfAbsent(b, block -> {
-            ResourceLocation lootTableLocation = block.getLootTable();
+            Identifier lootTableLocation = block.getDropTableId();
             if (lootTableLocation == LootTables.EMPTY) {
                 return Collections.emptyList();
             } else {
-                return getManager().getLootTableFromLocation(lootTableLocation).generate(new LootContext.Builder(null).withRandom(new Random()).withParameter(LootParameters.POSITION, BlockPos.ZERO).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withNullableParameter(LootParameters.BLOCK_ENTITY, null).withParameter(LootParameters.BLOCK_STATE, block.getDefaultState()).build(LootParameterSets.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList());
+                return getManager().getSupplier(lootTableLocation).getDrops(new LootContext.Builder(null).setRandom(new Random()).put(LootContextParameters.POSITION, BlockPos.ORIGIN).put(LootContextParameters.TOOL, ItemStack.EMPTY).putNullable(LootContextParameters.BLOCK_ENTITY, null).put(LootContextParameters.BLOCK_STATE, block.getDefaultState()).build(LootContextTypes.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList());
             }
         });
     }
@@ -329,10 +335,10 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
             searchingFor.add(block.asItem());
         }
         List<BlockPos> ret = new ArrayList<>();
-        for (Entity entity : ((ClientWorld) world).getAllEntities()) {
+        for (Entity entity : ((ClientWorld) world).getEntities()) {
             if (entity instanceof ItemEntity) {
                 ItemEntity ei = (ItemEntity) entity;
-                if (searchingFor.contains(ei.getItem().getItem())) {
+                if (searchingFor.contains(ei.getStack().getItem())) {
                     ret.add(new BlockPos(entity));
                 }
             }
@@ -375,7 +381,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
                     // is an x-ray and it'll get caught
                     if (mining.contains(bsi.get0(x, y, z).getBlock())) {
                         BlockPos pos = new BlockPos(x, y, z);
-                        if ((Baritone.settings().legitMineIncludeDiagonals.value && knownOreLocations.stream().anyMatch(ore -> ore.distanceSq(pos) <= 2 /* sq means this is pytha dist <= sqrt(2) */)) || RotationUtils.reachable(ctx.player(), pos, fakedBlockReachDistance).isPresent()) {
+                        if ((Baritone.settings().legitMineIncludeDiagonals.value && knownOreLocations.stream().anyMatch(ore -> ore.getSquaredDistance(pos) <= 2 /* sq means this is pytha dist <= sqrt(2) */)) || RotationUtils.reachable(ctx.player(), pos, fakedBlockReachDistance).isPresent()) {
                             knownOreLocations.add(pos);
                         }
                     }
@@ -389,7 +395,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         List<BlockPos> dropped = droppedItemsScan(mining, ctx.world);
         dropped.removeIf(drop -> {
             for (BlockPos pos : locs2) {
-                if (pos.distanceSq(drop) <= 9 && mining.contains(ctx.getBlock(pos.getX(), pos.getY(), pos.getZ())) && MineProcess.plausibleToBreak(ctx, pos)) { // TODO maybe drop also has to be supported? no lava below?
+                if (pos.getSquaredDistance(drop) <= 9 && mining.contains(ctx.getBlock(pos.getX(), pos.getY(), pos.getZ())) && MineProcess.plausibleToBreak(ctx, pos)) { // TODO maybe drop also has to be supported? no lava below?
                     return true;
                 }
             }
@@ -407,7 +413,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
                 .filter(pos -> !blacklist.contains(pos))
 
-                .sorted(Comparator.comparingDouble(new BlockPos(ctx.getBaritone().getPlayerContext().player())::distanceSq))
+                .sorted(Comparator.comparingDouble(new BlockPos(ctx.getBaritone().getPlayerContext().player())::getSquaredDistance))
                 .collect(Collectors.toList());
 
         if (locs.size() > max) {

@@ -21,8 +21,8 @@ import baritone.Baritone;
 import baritone.api.cache.IWorldProvider;
 import baritone.api.utils.Helper;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.server.ServerWorld;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -58,15 +58,15 @@ public class WorldProvider implements IWorldProvider, Helper {
         File directory;
         File readme;
 
-        IntegratedServer integratedServer = mc.getIntegratedServer();
+        IntegratedServer integratedServer = mc.getServer();
 
         // If there is an integrated server running (Aka Singleplayer) then do magic to find the world save file
-        if (mc.isSingleplayer()) {
+        if (mc.isInSingleplayer()) {
             ServerWorld localServerWorld = integratedServer.getWorld(dimension);
-            directory = dimension.getDirectory(localServerWorld.getSaveHandler().getWorldDirectory());
+            directory = dimension.getFile(localServerWorld.getSaveHandler().getWorldDir());
 
             // Gets the "depth" of this directory relative the the game's run directory, 2 is the location of the world
-            if (directory.toPath().relativize(mc.gameDir.toPath()).getNameCount() != 2) {
+            if (directory.toPath().relativize(mc.runDirectory.toPath()).getNameCount() != 2) {
                 // subdirectory of the main save directory for this world
                 directory = directory.getParentFile();
             }
@@ -74,7 +74,7 @@ public class WorldProvider implements IWorldProvider, Helper {
             directory = new File(directory, "baritone");
             readme = directory;
         } else { // Otherwise, the server must be remote...
-            String folderName = mc.isConnectedToRealms() ? "realms" : mc.getCurrentServerData().serverIP;
+            String folderName = mc.isConnectedToRealms() ? "realms" : mc.getCurrentServerEntry().address;
             if (SystemUtils.IS_OS_WINDOWS) {
                 folderName = folderName.replace(":", "_");
             }
@@ -89,7 +89,7 @@ public class WorldProvider implements IWorldProvider, Helper {
         } catch (IOException ignored) {}
 
         // We will actually store the world data in a subfolder: "DIM<id>"
-        Path dir = new File(directory, "DIM" + dimension.getId()).toPath();
+        Path dir = new File(directory, "DIM" + dimension.getRawId()).toPath();
         if (!Files.exists(dir)) {
             try {
                 Files.createDirectories(dir);
@@ -98,7 +98,7 @@ public class WorldProvider implements IWorldProvider, Helper {
 
         System.out.println("Baritone world data dir: " + dir);
         synchronized (worldCache) {
-            this.currentWorld = worldCache.computeIfAbsent(dir, d -> new WorldData(d, dimension.getId()));
+            this.currentWorld = worldCache.computeIfAbsent(dir, d -> new WorldData(d, dimension.getRawId()));
         }
     }
 

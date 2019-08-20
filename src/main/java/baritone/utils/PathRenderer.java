@@ -30,17 +30,17 @@ import baritone.pathing.path.PathExecutor;
 import baritone.utils.accessor.IEntityRenderManager;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.tileentity.BeaconTileEntityRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 
 import java.awt.*;
 import java.util.Collection;
@@ -55,22 +55,22 @@ import static org.lwjgl.opengl.GL11.*;
  */
 public final class PathRenderer implements Helper {
 
-    private static final ResourceLocation TEXTURE_BEACON_BEAM = new ResourceLocation("textures/entity/beacon_beam.png");
+    private static final Identifier TEXTURE_BEACON_BEAM = new Identifier("textures/entity/beacon_beam.png");
     private static final Tessellator TESSELLATOR = Tessellator.getInstance();
-    private static final BufferBuilder BUFFER = TESSELLATOR.getBuffer();
+    private static final BufferBuilder BUFFER = TESSELLATOR.getBufferBuilder();
 
     private PathRenderer() {}
 
     public static double posX() {
-        return ((IEntityRenderManager) mc.getRenderManager()).renderPosX();
+        return ((IEntityRenderManager) mc.getEntityRenderManager()).renderPosX();
     }
 
     public static double posY() {
-        return ((IEntityRenderManager) mc.getRenderManager()).renderPosY();
+        return ((IEntityRenderManager) mc.getEntityRenderManager()).renderPosY();
     }
 
     public static double posZ() {
-        return ((IEntityRenderManager) mc.getRenderManager()).renderPosZ();
+        return ((IEntityRenderManager) mc.getEntityRenderManager()).renderPosZ();
     }
 
     public static void render(RenderEvent event, PathingBehavior behavior) {
@@ -80,15 +80,15 @@ public final class PathRenderer implements Helper {
             ((GuiClick) mc.currentScreen).onRender();
         }
 
-        int thisPlayerDimension = behavior.baritone.getPlayerContext().world().getDimension().getType().getId();
-        int currentRenderViewDimension = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().world().getDimension().getType().getId();
+        int thisPlayerDimension = behavior.baritone.getPlayerContext().world().getDimension().getType().getRawId();
+        int currentRenderViewDimension = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().world().getDimension().getType().getRawId();
 
         if (thisPlayerDimension != currentRenderViewDimension) {
             // this is a path for a bot in a different dimension, don't render it
             return;
         }
 
-        Entity renderView = mc.getRenderViewEntity();
+        Entity renderView = mc.getCameraEntity();
 
         if (renderView.world != BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().world()) {
             System.out.println("I have no idea what's going on");
@@ -201,12 +201,12 @@ public final class PathRenderer implements Helper {
         double d0 = posX();
         double d1 = posY();
         double d2 = posZ();
-        BUFFER.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        BUFFER.pos(bp1x + 0.5D - d0, bp1y + 0.5D - d1, bp1z + 0.5D - d2).endVertex();
-        BUFFER.pos(bp2x + 0.5D - d0, bp2y + 0.5D - d1, bp2z + 0.5D - d2).endVertex();
-        BUFFER.pos(bp2x + 0.5D - d0, bp2y + 0.53D - d1, bp2z + 0.5D - d2).endVertex();
-        BUFFER.pos(bp1x + 0.5D - d0, bp1y + 0.53D - d1, bp1z + 0.5D - d2).endVertex();
-        BUFFER.pos(bp1x + 0.5D - d0, bp1y + 0.5D - d1, bp1z + 0.5D - d2).endVertex();
+        BUFFER.begin(GL_LINE_STRIP, VertexFormats.POSITION);
+        BUFFER.vertex(bp1x + 0.5D - d0, bp1y + 0.5D - d1, bp1z + 0.5D - d2).next();
+        BUFFER.vertex(bp2x + 0.5D - d0, bp2y + 0.5D - d1, bp2z + 0.5D - d2).next();
+        BUFFER.vertex(bp2x + 0.5D - d0, bp2y + 0.53D - d1, bp2z + 0.5D - d2).next();
+        BUFFER.vertex(bp1x + 0.5D - d0, bp1y + 0.53D - d1, bp1z + 0.5D - d2).next();
+        BUFFER.vertex(bp1x + 0.5D - d0, bp1y + 0.5D - d1, bp1z + 0.5D - d2).next();
     }
 
     public static void drawManySelectionBoxes(Entity player, Collection<BlockPos> positions, Color color) {
@@ -226,8 +226,8 @@ public final class PathRenderer implements Helper {
         BlockStateInterface bsi = new BlockStateInterface(BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext()); // TODO this assumes same dimension between primary baritone and render view? is this safe?
         positions.forEach(pos -> {
             BlockState state = bsi.get0(pos);
-            VoxelShape shape = state.getShape(player.world, pos);
-            AxisAlignedBB toDraw = shape.isEmpty() ? VoxelShapes.fullCube().getBoundingBox() : shape.getBoundingBox();
+            VoxelShape shape = state.getOutlineShape(player.world, pos);
+            Box toDraw = shape.isEmpty() ? VoxelShapes.fullCube().getBoundingBox() : shape.getBoundingBox();
             toDraw = toDraw.offset(pos);
             drawAABB(toDraw);
         });
@@ -241,32 +241,32 @@ public final class PathRenderer implements Helper {
         GlStateManager.disableBlend();
     }
 
-    public static void drawAABB(AxisAlignedBB aabb) {
+    public static void drawAABB(Box aabb) {
         float expand = 0.002F;
-        AxisAlignedBB toDraw = aabb.expand(expand, expand, expand).offset(-posX(), -posY(), -posZ());
-        BUFFER.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        BUFFER.pos(toDraw.minX, toDraw.minY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.minY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.minY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.minY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.minY, toDraw.minZ).endVertex();
+        Box toDraw = aabb.expand(expand, expand, expand).offset(-posX(), -posY(), -posZ());
+        BUFFER.begin(GL_LINE_STRIP, VertexFormats.POSITION);
+        BUFFER.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
         TESSELLATOR.draw();
-        BUFFER.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        BUFFER.pos(toDraw.minX, toDraw.maxY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.maxY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.maxY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.maxY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.maxY, toDraw.minZ).endVertex();
+        BUFFER.begin(GL_LINE_STRIP, VertexFormats.POSITION);
+        BUFFER.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
         TESSELLATOR.draw();
-        BUFFER.begin(GL_LINES, DefaultVertexFormats.POSITION);
-        BUFFER.pos(toDraw.minX, toDraw.minY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.maxY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.minY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.maxY, toDraw.minZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.minY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.maxX, toDraw.maxY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.minY, toDraw.maxZ).endVertex();
-        BUFFER.pos(toDraw.minX, toDraw.maxY, toDraw.maxZ).endVertex();
+        BUFFER.begin(GL_LINES, VertexFormats.POSITION);
+        BUFFER.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
+        BUFFER.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
         TESSELLATOR.draw();
     }
 
@@ -313,13 +313,13 @@ public final class PathRenderer implements Helper {
                     GlStateManager.disableDepthTest();
                 }
 
-                BeaconTileEntityRenderer.renderBeamSegment(
+                BeaconBlockEntityRenderer.renderLightBeam(
                         goalPos.getX() - renderPosX,
                         -renderPosY,
                         goalPos.getZ() - renderPosZ,
                         partialTicks,
                         1.0,
-                        player.world.getGameTime(),
+                        player.world.getTimeOfDay(),
                         0,
                         256,
                         color.getColorComponents(null),
@@ -353,10 +353,10 @@ public final class PathRenderer implements Helper {
             return;
         } else if (goal instanceof GoalYLevel) {
             GoalYLevel goalpos = (GoalYLevel) goal;
-            minX = player.posX - Baritone.settings().yLevelBoxSize.value - renderPosX;
-            minZ = player.posZ - Baritone.settings().yLevelBoxSize.value - renderPosZ;
-            maxX = player.posX + Baritone.settings().yLevelBoxSize.value - renderPosX;
-            maxZ = player.posZ + Baritone.settings().yLevelBoxSize.value - renderPosZ;
+            minX = player.x - Baritone.settings().yLevelBoxSize.value - renderPosX;
+            minZ = player.z - Baritone.settings().yLevelBoxSize.value - renderPosZ;
+            maxX = player.x + Baritone.settings().yLevelBoxSize.value - renderPosX;
+            maxZ = player.z + Baritone.settings().yLevelBoxSize.value - renderPosZ;
             minY = ((GoalYLevel) goal).level - renderPosY;
             maxY = minY + 2;
             y1 = 1 + y + goalpos.level - renderPosY;
@@ -378,15 +378,15 @@ public final class PathRenderer implements Helper {
         renderHorizontalQuad(minX, maxX, minZ, maxZ, y1);
         renderHorizontalQuad(minX, maxX, minZ, maxZ, y2);
 
-        BUFFER.begin(GL_LINES, DefaultVertexFormats.POSITION);
-        BUFFER.pos(minX, minY, minZ).endVertex();
-        BUFFER.pos(minX, maxY, minZ).endVertex();
-        BUFFER.pos(maxX, minY, minZ).endVertex();
-        BUFFER.pos(maxX, maxY, minZ).endVertex();
-        BUFFER.pos(maxX, minY, maxZ).endVertex();
-        BUFFER.pos(maxX, maxY, maxZ).endVertex();
-        BUFFER.pos(minX, minY, maxZ).endVertex();
-        BUFFER.pos(minX, maxY, maxZ).endVertex();
+        BUFFER.begin(GL_LINES, VertexFormats.POSITION);
+        BUFFER.vertex(minX, minY, minZ).next();
+        BUFFER.vertex(minX, maxY, minZ).next();
+        BUFFER.vertex(maxX, minY, minZ).next();
+        BUFFER.vertex(maxX, maxY, minZ).next();
+        BUFFER.vertex(maxX, minY, maxZ).next();
+        BUFFER.vertex(maxX, maxY, maxZ).next();
+        BUFFER.vertex(minX, minY, maxZ).next();
+        BUFFER.vertex(minX, maxY, maxZ).next();
         TESSELLATOR.draw();
 
         if (Baritone.settings().renderGoalIgnoreDepth.value) {
@@ -399,11 +399,11 @@ public final class PathRenderer implements Helper {
 
     private static void renderHorizontalQuad(double minX, double maxX, double minZ, double maxZ, double y) {
         if (y != 0) {
-            BUFFER.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION);
-            BUFFER.pos(minX, y, minZ).endVertex();
-            BUFFER.pos(maxX, y, minZ).endVertex();
-            BUFFER.pos(maxX, y, maxZ).endVertex();
-            BUFFER.pos(minX, y, maxZ).endVertex();
+            BUFFER.begin(GL_LINE_LOOP, VertexFormats.POSITION);
+            BUFFER.vertex(minX, y, minZ).next();
+            BUFFER.vertex(maxX, y, minZ).next();
+            BUFFER.vertex(maxX, y, maxZ).next();
+            BUFFER.vertex(minX, y, maxZ).next();
             TESSELLATOR.draw();
         }
     }

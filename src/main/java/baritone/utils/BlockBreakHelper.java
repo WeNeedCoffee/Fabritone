@@ -19,11 +19,11 @@ package baritone.utils;
 
 import baritone.api.utils.Helper;
 import baritone.api.utils.IPlayerContext;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Direction;
 
 /**
  * @author Brady
@@ -41,7 +41,7 @@ public final class BlockBreakHelper implements Helper {
 
     private void tryBreakBlock(BlockPos pos, Direction side) {
         if (playerContext.playerController().onPlayerDamageBlock(pos, side)) {
-            playerContext.player().swingArm(Hand.MAIN_HAND);
+            playerContext.player().swingHand(Hand.MAIN_HAND);
         }
     }
 
@@ -54,11 +54,11 @@ public final class BlockBreakHelper implements Helper {
 
 
     public void tick(boolean isLeftClick) {
-        RayTraceResult trace = playerContext.objectMouseOver();
-        boolean isBlockTrace = trace != null && trace.getType() == RayTraceResult.Type.BLOCK;
+        HitResult trace = playerContext.objectMouseOver();
+        boolean isBlockTrace = trace != null && trace.getType() == HitResult.Type.BLOCK;
 
         if (isLeftClick && isBlockTrace) {
-            tryBreakBlock(((BlockRayTraceResult) trace).getPos(), ((BlockRayTraceResult) trace).getFace());
+            tryBreakBlock(((BlockHitResult) trace).getBlockPos(), ((BlockHitResult) trace).getSide());
             didBreakLastTick = true;
         } else if (didBreakLastTick) {
             stopBreakingBlock();

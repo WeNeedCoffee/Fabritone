@@ -60,8 +60,8 @@ public final class FollowProcess extends BaritoneProcessHelper implements IFollo
         if (Baritone.settings().followOffsetDistance.value == 0) {
             pos = new BlockPos(following);
         } else {
-            GoalXZ g = GoalXZ.fromDirection(following.getPositionVector(), Baritone.settings().followOffsetDirection.value, Baritone.settings().followOffsetDistance.value);
-            pos = new BlockPos(g.getX(), following.posY, g.getZ());
+            GoalXZ g = GoalXZ.fromDirection(following.getPosVector(), Baritone.settings().followOffsetDirection.value, Baritone.settings().followOffsetDistance.value);
+            pos = new BlockPos(g.getX(), following.y, g.getZ());
         }
         return new GoalNear(pos, Baritone.settings().followRadius.value);
     }

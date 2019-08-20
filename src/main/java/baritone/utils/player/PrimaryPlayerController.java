@@ -19,17 +19,17 @@ package baritone.utils.player;
 
 import baritone.api.utils.Helper;
 import baritone.api.utils.IPlayerController;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.container.SlotActionType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.ClickType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.GameType;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 
 /**
@@ -44,37 +44,37 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     @Override
     public boolean onPlayerDamageBlock(BlockPos pos, Direction side) {
-        return mc.playerController.onPlayerDamageBlock(pos, side);
+        return mc.interactionManager.method_2902(pos, side);
     }
 
     @Override
     public void resetBlockRemoving() {
-        mc.playerController.resetBlockRemoving();
+        mc.interactionManager.cancelBlockBreaking();
     }
 
     @Override
-    public ItemStack windowClick(int windowId, int slotId, int mouseButton, ClickType type, PlayerEntity player) {
-        return mc.playerController.windowClick(windowId, slotId, mouseButton, type, player);
+    public ItemStack windowClick(int windowId, int slotId, int mouseButton, SlotActionType type, PlayerEntity player) {
+        return mc.interactionManager.method_2906(windowId, slotId, mouseButton, type, player);
     }
 
     @Override
-    public void setGameType(GameType type) {
-        mc.playerController.setGameType(type);
+    public void setGameType(GameMode type) {
+        mc.interactionManager.setGameMode(type);
     }
 
     @Override
-    public GameType getGameType() {
-        return mc.playerController.getCurrentGameType();
+    public GameMode getGameType() {
+        return mc.interactionManager.getCurrentGameMode();
     }
 
     @Override
-    public ActionResultType processRightClickBlock(ClientPlayerEntity player, World world, Hand hand, BlockRayTraceResult result) {
+    public ActionResult processRightClickBlock(ClientPlayerEntity player, World world, Hand hand, BlockHitResult result) {
         // primaryplayercontroller is always in a ClientWorld so this is ok
-        return mc.playerController.func_217292_a(player, (ClientWorld) world, hand, result);
+        return mc.interactionManager.interactBlock(player, (ClientWorld) world, hand, result);
     }
 
     @Override
-    public ActionResultType processRightClick(ClientPlayerEntity player, World world, Hand hand) {
-        return mc.playerController.processRightClick(player, world, hand);
+    public ActionResult processRightClick(ClientPlayerEntity player, World world, Hand hand) {
+        return mc.interactionManager.interactItem(player, world, hand);
     }
 }
