@@ -9,3 +9,6 @@ Download the [latest release](https://gitlab.com/deftware/fabritone/-/tags) and 
 Compatible with Minecraft 1.14.4.
 
 
+**NOTE** the prefix for using baritone with this build is @ not #
+
+
