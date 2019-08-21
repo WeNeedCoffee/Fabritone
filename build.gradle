@@ -13,3 +13,7 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}"
     modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
 }
+
+jar {
+    from "LICENSE"
+}
