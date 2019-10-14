@@ -17,17 +17,20 @@
 
 package baritone.utils.schematic;
 
-import baritone.api.utils.ISchematic;
+import baritone.api.schematic.ISchematic;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.CompoundNBT;
+
+import java.util.List;
 
 public class Schematic implements ISchematic {
+
     public final int widthX;
     public final int heightY;
     public final int lengthZ;
     protected final BlockState[][][] states;
 
-    public Schematic(Tag schematic) {
+    public Schematic(CompoundNBT schematic) {
         /*String type = schematic.getString("Materials");
         if (!type.equals("Alpha")) {
             throw new IllegalStateException("bad schematic " + type);
@@ -68,7 +71,7 @@ public class Schematic implements ISchematic {
     }
 
     @Override
-    public BlockState desiredState(int x, int y, int z) {
+    public BlockState desiredState(int x, int y, int z, BlockState current, List<BlockState> approxPlaceable) {
         return states[x][z][y];
     }
 

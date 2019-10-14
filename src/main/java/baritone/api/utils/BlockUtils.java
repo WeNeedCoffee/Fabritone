@@ -17,20 +17,19 @@
 
 package baritone.api.utils;
 
-import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class BlockUtils {
+
     private static transient Map<String, Block> resourceCache = new HashMap<>();
 
     public static String blockToString(Block block) {
-        Identifier loc = Registry.BLOCK.getId(block);
+        ResourceLocation loc = Registry.BLOCK.getKey(block);
         String name = loc.getPath(); // normally, only write the part after the minecraft:
         if (!loc.getNamespace().equals("minecraft")) {
             // Baritone is running on top of forge with mods installed, perhaps?
@@ -41,7 +40,11 @@ public class BlockUtils {
 
     public static Block stringToBlockRequired(String name) {
         Block block = stringToBlockNullable(name);
-        Objects.requireNonNull(block);
+
+        if (block == null) {
+            throw new IllegalArgumentException(String.format("Invalid block name %s", name));
+        }
+
         return block;
     }
 
@@ -54,10 +57,7 @@ public class BlockUtils {
         if (resourceCache.containsKey(name)) {
             return null; // cached as null
         }
-        block = Registry.BLOCK.get(Identifier.tryParse(name.contains(":") ? name : "minecraft:" + name));
-        if (block instanceof AirBlock && !name.equals("air")) {
-            block = null;
-        }
+        block = Registry.BLOCK.getValue(ResourceLocation.tryCreate(name.contains(":") ? name : "minecraft:" + name)).orElse(null);
         Map<String, Block> copy = new HashMap<>(resourceCache); // read only copy is safe, wont throw concurrentmodification
         copy.put(name, block);
         resourceCache = copy;

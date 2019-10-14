@@ -18,12 +18,18 @@
 package baritone.api.utils;
 
 import baritone.api.BaritoneAPI;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
+ * An ease-of-access interface to provide the {@link Minecraft} game instance,
+ * chat and console logging mechanisms, and the Baritone chat prefix.
+ *
  * @author Brady
  * @since 8/1/2018
  */
@@ -34,15 +40,25 @@ public interface Helper {
      */
     Helper HELPER = new Helper() {};
 
-    Text MESSAGE_PREFIX = new LiteralText(String.format(
-            "%s[%sBaritone%s]%s",
-            Formatting.DARK_PURPLE,
-            Formatting.LIGHT_PURPLE,
-            Formatting.DARK_PURPLE,
-            Formatting.GRAY
-    ));
+    /**
+     * Instance of the game
+     */
+    Minecraft mc = Minecraft.getInstance();
 
-    MinecraftClient mc = MinecraftClient.getInstance();
+    static ITextComponent getPrefix() {
+        // Inner text component
+        ITextComponent baritone = new StringTextComponent(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
+        baritone.getStyle().setColor(TextFormatting.LIGHT_PURPLE);
+
+        // Outer brackets
+        ITextComponent prefix = new StringTextComponent("");
+        prefix.getStyle().setColor(TextFormatting.DARK_PURPLE);
+        prefix.appendText("[");
+        prefix.appendSibling(baritone);
+        prefix.appendText("]");
+
+        return prefix;
+    }
 
     /**
      * Send a message to chat only if chatDebug is on
@@ -59,14 +75,40 @@ public interface Helper {
     }
 
     /**
-     * Send a message to chat regardless of chatDebug (should only be used for critically important messages, or as a direct response to a chat command)
+     * Send components to chat with the [Baritone] prefix
+     *
+     * @param components The components to send
+     */
+    default void logDirect(ITextComponent... components) {
+        ITextComponent component = new StringTextComponent("");
+        component.appendSibling(getPrefix());
+        component.appendSibling(new StringTextComponent(" "));
+        Arrays.asList(components).forEach(component::appendSibling);
+        mc.execute(() -> BaritoneAPI.getSettings().logger.value.accept(component));
+    }
+
+    /**
+     * Send a message to chat regardless of chatDebug (should only be used for critically important messages, or as a
+     * direct response to a chat command)
+     *
+     * @param message The message to display in chat
+     * @param color   The color to print that message in
+     */
+    default void logDirect(String message, TextFormatting color) {
+        Stream.of(message.split("\n")).forEach(line -> {
+            ITextComponent component = new StringTextComponent(line.replace("\t", "    "));
+            component.getStyle().setColor(color);
+            logDirect(component);
+        });
+    }
+
+    /**
+     * Send a message to chat regardless of chatDebug (should only be used for critically important messages, or as a
+     * direct response to a chat command)
      *
      * @param message The message to display in chat
      */
     default void logDirect(String message) {
-        Text component = MESSAGE_PREFIX.copy();
-        component.getStyle().setColor(Formatting.GRAY);
-        component.append(new LiteralText(" " + message));
-        MinecraftClient.getInstance().execute(() -> BaritoneAPI.getSettings().logger.value.accept(component));
+        logDirect(message, TextFormatting.GRAY);
     }
 }

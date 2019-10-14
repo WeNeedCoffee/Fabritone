@@ -17,16 +17,16 @@
 
 package baritone.api.utils;
 
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.container.SlotActionType;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.GameMode;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 
 /**
@@ -35,21 +35,27 @@ import net.minecraft.world.World;
  */
 public interface IPlayerController {
 
+    void syncHeldItem();
+
+    boolean hasBrokenBlock();
+
     boolean onPlayerDamageBlock(BlockPos pos, Direction side);
 
     void resetBlockRemoving();
 
-    ItemStack windowClick(int windowId, int slotId, int mouseButton, SlotActionType type, PlayerEntity player);
+    ItemStack windowClick(int windowId, int slotId, int mouseButton, ClickType type, PlayerEntity player);
 
-    void setGameType(GameMode type);
+    GameType getGameType();
 
-    GameMode getGameType();
+    ActionResultType processRightClickBlock(ClientPlayerEntity player, World world, Hand hand, BlockRayTraceResult result);
+
+    ActionResultType processRightClick(ClientPlayerEntity player, World world, Hand hand);
+
+    boolean clickBlock(BlockPos loc, Direction face);
+
+    void setHittingBlock(boolean hittingBlock);
 
     default double getBlockReachDistance() {
         return this.getGameType().isCreative() ? 5.0F : 4.5F;
     }
-
-    ActionResult processRightClickBlock(ClientPlayerEntity player, World world, Hand hand, BlockHitResult result);
-
-    ActionResult processRightClick(ClientPlayerEntity player, World world, Hand hand);
 }

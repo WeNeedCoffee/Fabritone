@@ -20,10 +20,10 @@ package baritone.api.utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FireBlock;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.World;
 
 /**
@@ -48,9 +48,9 @@ public final class VecUtils {
         if (shape.isEmpty()) {
             return getBlockPosCenter(pos);
         }
-        double xDiff = (shape.getMinimum(Direction.Axis.X) + shape.getMaximum(Direction.Axis.X)) / 2;
-        double yDiff = (shape.getMinimum(Direction.Axis.Y) + shape.getMaximum(Direction.Axis.Y)) / 2;
-        double zDiff = (shape.getMinimum(Direction.Axis.Z) + shape.getMaximum(Direction.Axis.Z)) / 2;
+        double xDiff = (shape.getStart(Direction.Axis.X) + shape.getEnd(Direction.Axis.X)) / 2;
+        double yDiff = (shape.getStart(Direction.Axis.Y) + shape.getEnd(Direction.Axis.Y)) / 2;
+        double zDiff = (shape.getStart(Direction.Axis.Z) + shape.getEnd(Direction.Axis.Z)) / 2;
         if (Double.isNaN(xDiff) || Double.isNaN(yDiff) || Double.isNaN(zDiff)) {
             throw new IllegalStateException(b + " " + pos + " " + shape);
         }
@@ -105,7 +105,7 @@ public final class VecUtils {
      * @see #getBlockPosCenter(BlockPos)
      */
     public static double entityDistanceToCenter(Entity entity, BlockPos pos) {
-        return distanceToCenter(pos, entity.x, entity.y, entity.z);
+        return distanceToCenter(pos, entity.posX, entity.posY, entity.posZ);
     }
 
     /**
@@ -118,6 +118,6 @@ public final class VecUtils {
      * @see #getBlockPosCenter(BlockPos)
      */
     public static double entityFlatDistanceToCenter(Entity entity, BlockPos pos) {
-        return distanceToCenter(pos, entity.x, pos.getY() + 0.5, entity.z);
+        return distanceToCenter(pos, entity.posX, pos.getY() + 0.5, entity.posZ);
     }
 }

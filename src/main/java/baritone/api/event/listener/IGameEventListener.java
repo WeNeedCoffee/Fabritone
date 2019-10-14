@@ -18,6 +18,9 @@
 package baritone.api.event.listener;
 
 import baritone.api.event.events.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -51,6 +54,13 @@ public interface IGameEventListener {
      * @see ClientPlayerEntity#sendChatMessage(String)
      */
     void onSendChatMessage(ChatEvent event);
+
+    /**
+     * Runs whenever the client player tries to tab complete in chat.
+     *
+     * @param event The event
+     */
+    void onPreTabComplete(TabCompleteEvent event);
 
     /**
      * Runs before and after whenever a chunk is either loaded, unloaded, or populated.

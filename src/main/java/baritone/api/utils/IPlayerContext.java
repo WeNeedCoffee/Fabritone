@@ -19,13 +19,9 @@ package baritone.api.utils;
 
 import baritone.api.cache.IWorldData;
 import net.minecraft.block.SlabBlock;
-import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
@@ -46,7 +42,7 @@ public interface IPlayerContext {
     World world();
 
     default Iterable<Entity> entities() {
-        return ((ClientWorld) world()).getEntities();
+        return ((ClientWorld) world()).getAllEntities();
     }
 
     default Stream<Entity> entitiesStream() {
@@ -56,27 +52,39 @@ public interface IPlayerContext {
 
     IWorldData worldData();
 
-    HitResult objectMouseOver();
+    RayTraceResult objectMouseOver();
 
     default BetterBlockPos playerFeet() {
         // TODO find a better way to deal with soul sand!!!!!
-        BetterBlockPos feet = new BetterBlockPos(player().x, player().y + 0.1251, player().z);
-        if (world().getBlockState(feet).getBlock() instanceof SlabBlock) {
-            return feet.up();
-        }
+        BetterBlockPos feet = new BetterBlockPos(player().posX, player().posY + 0.1251, player().posZ);
+
+        // sometimes when calling this from another thread or while world is null, it'll throw a NullPointerException
+        // that causes the game to immediately crash
+        //
+        // so of course crashing on 2b is horribly bad due to queue times and logout spot
+        // catch the NPE and ignore it if it does happen
+        //
+        // this does not impact performance at all since we're not null checking constantly
+        // if there is an exception, the only overhead is Java generating the exception object... so we can ignore it
+        try {
+            if (world().getBlockState(feet).getBlock() instanceof SlabBlock) {
+                return feet.up();
+            }
+        } catch (NullPointerException ignored) {}
+
         return feet;
     }
 
     default Vec3d playerFeetAsVec() {
-        return new Vec3d(player().x, player().y, player().z);
+        return new Vec3d(player().posX, player().posY, player().posZ);
     }
 
     default Vec3d playerHead() {
-        return new Vec3d(player().x, player().y + player().getEyeHeight(EntityPose.STANDING), player().z);
+        return new Vec3d(player().posX, player().posY + player().getEyeHeight(), player().posZ);
     }
 
     default Rotation playerRotations() {
-        return new Rotation(player().yaw, player().pitch);
+        return new Rotation(player().rotationYaw, player().rotationPitch);
     }
 
     /**
@@ -85,9 +93,9 @@ public interface IPlayerContext {
      * @return The position of the highlighted block
      */
     default Optional<BlockPos> getSelectedBlock() {
-        HitResult result = objectMouseOver();
-        if (result != null && result.getType() == HitResult.Type.BLOCK) {
-            return Optional.of(((BlockHitResult) result).getBlockPos());
+        RayTraceResult result = objectMouseOver();
+        if (result != null && result.getType() == RayTraceResult.Type.BLOCK) {
+            return Optional.of(((BlockRayTraceResult) result).getPos());
         }
         return Optional.empty();
     }
@@ -102,9 +110,9 @@ public interface IPlayerContext {
      * @return The entity
      */
     default Optional<Entity> getSelectedEntity() {
-        HitResult result = objectMouseOver();
-        if (result != null && result.getType() == HitResult.Type.ENTITY) {
-            return Optional.of(((EntityHitResult) result).getEntity());
+        RayTraceResult result = objectMouseOver();
+        if (result != null && result.getType() == RayTraceResult.Type.ENTITY) {
+            return Optional.of(((EntityRayTraceResult) result).getEntity());
         }
         return Optional.empty();
     }

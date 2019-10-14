@@ -15,41 +15,32 @@
  * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package baritone.utils.schematic;
+package baritone.api.schematic;
 
-import baritone.api.utils.ISchematic;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+public abstract class AbstractSchematic implements ISchematic {
 
-public class AirSchematic implements ISchematic {
+    protected int x;
+    protected int y;
+    protected int z;
 
-    private final int widthX;
-    private final int heightY;
-    private final int lengthZ;
-
-    public AirSchematic(int widthX, int heightY, int lengthZ) {
-        this.widthX = widthX;
-        this.heightY = heightY;
-        this.lengthZ = lengthZ;
-    }
-
-    @Override
-    public BlockState desiredState(int x, int y, int z) {
-        return Blocks.AIR.getDefaultState();
+    public AbstractSchematic(int x, int y, int z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
     @Override
     public int widthX() {
-        return widthX;
+        return x;
     }
 
     @Override
     public int heightY() {
-        return heightY;
+        return y;
     }
 
     @Override
     public int lengthZ() {
-        return lengthZ;
+        return z;
     }
 }
