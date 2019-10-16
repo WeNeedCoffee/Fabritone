@@ -55,3 +55,4 @@ public class PlayerMovementInput extends net.minecraft.client.input.Input {
         }
     }
 }
+

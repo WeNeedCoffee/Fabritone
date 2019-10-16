@@ -21,8 +21,8 @@ import baritone.Baritone;
 import baritone.api.cache.IWorldProvider;
 import baritone.api.utils.Helper;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.server.world.ServerWorld;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;

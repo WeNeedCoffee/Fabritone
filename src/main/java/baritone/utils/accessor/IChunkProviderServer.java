@@ -17,8 +17,7 @@
 
 package baritone.utils.accessor;
 
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.chunk.storage.IChunkLoader;
+import net.minecraft.world.chunk.ChunkManager;
 
 /**
  * @author Brady
@@ -27,5 +26,5 @@ import net.minecraft.world.chunk.storage.IChunkLoader;
  */
 public interface IChunkProviderServer {
 
-    IChunkLoader getChunkLoader();
+    ChunkManager getChunkLoader();
 }

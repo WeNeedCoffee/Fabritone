@@ -20,13 +20,12 @@ package baritone.utils;
 import baritone.Baritone;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
+import net.minecraft.entity.effect.StatusEffects;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +37,7 @@ import java.util.function.Function;
  * @author Avery, Brady, leijurv
  */
 public class ToolSet {
+
     /**
      * A cache mapping a {@link Block} to how long it will take to break
      * with this toolset, given the optimum tool is used.
@@ -84,30 +84,39 @@ public class ToolSet {
         return itemStack.getItem() instanceof ToolItem ? 1 : -1;
     }
 
+    public boolean hasSilkTouch(ItemStack stack) {
+        return EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) > 0;
+    }
+
     /**
      * Calculate which tool on the hotbar is best for mining
      *
      * @param b the blockstate to be mined
-     * @return A byte containing the index in the tools array that worked best
+     * @return An int containing the index in the tools array that worked best
      */
-    public byte getBestSlot(Block b) {
-        byte best = 0;
-        double value = Double.NEGATIVE_INFINITY;
-        int materialCost = Integer.MIN_VALUE;
+    public int getBestSlot(Block b, boolean preferSilkTouch) {
+        int best = 0;
+        double highestSpeed = Double.NEGATIVE_INFINITY;
+        int lowestCost = Integer.MIN_VALUE;
+        boolean bestSilkTouch = false;
         BlockState blockState = b.getDefaultState();
-        for (byte i = 0; i < 9; i++) {
+        for (int i = 0; i < 9; i++) {
             ItemStack itemStack = player.inventory.getInvStack(i);
-            double v = calculateSpeedVsBlock(itemStack, blockState);
-            if (v > value) {
-                value = v;
+            double speed = calculateSpeedVsBlock(itemStack, blockState);
+            boolean silkTouch = hasSilkTouch(itemStack);
+            if (speed > highestSpeed) {
+                highestSpeed = speed;
                 best = i;
-                materialCost = getMaterialCost(itemStack);
-            } else if (v == value) {
-                int c = getMaterialCost(itemStack);
-                if (c < materialCost) {
-                    value = v;
+                lowestCost = getMaterialCost(itemStack);
+                bestSilkTouch = silkTouch;
+            } else if (speed == highestSpeed) {
+                int cost = getMaterialCost(itemStack);
+                if ((cost < lowestCost && (silkTouch || !bestSilkTouch)) ||
+                        (preferSilkTouch && !bestSilkTouch && silkTouch)) {
+                    highestSpeed = speed;
                     best = i;
-                    materialCost = c;
+                    lowestCost = cost;
+                    bestSilkTouch = silkTouch;
                 }
             }
         }
@@ -121,7 +130,7 @@ public class ToolSet {
      * @return A double containing the destruction ticks with the best tool
      */
     private double getBestDestructionTime(Block b) {
-        ItemStack stack = player.inventory.getInvStack(getBestSlot(b));
+        ItemStack stack = player.inventory.getInvStack(getBestSlot(b, false));
         return calculateSpeedVsBlock(stack, b.getDefaultState()) * avoidanceMultiplier(b);
     }
 

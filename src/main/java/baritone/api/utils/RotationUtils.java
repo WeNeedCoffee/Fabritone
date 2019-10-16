@@ -21,12 +21,14 @@ import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FireBlock;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.Direction;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.*;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 
 import java.util.Optional;
 
@@ -168,7 +170,7 @@ public final class RotationUtils {
              *
              * or if you're a normal person literally all this does it ensure that we don't nudge the pitch to a normal level
              */
-            return Optional.of(new Rotation(entity.rotationYaw, entity.rotationPitch + 0.0001F));
+            return Optional.of(new Rotation(entity.yaw, entity.pitch + 0.0001F));
         }
         Optional<Rotation> possibleRotation = reachableCenter(entity, pos, blockReachDistance);
         //System.out.println("center: " + possibleRotation);
@@ -177,14 +179,14 @@ public final class RotationUtils {
         }
 
         BlockState state = entity.world.getBlockState(pos);
-        VoxelShape shape = state.getShape(entity.world, pos);
+        VoxelShape shape = state.getCollisionShape(entity.world, pos);
         if (shape.isEmpty()) {
             shape = VoxelShapes.fullCube();
         }
         for (Vec3d sideOffset : BLOCK_SIDE_MULTIPLIERS) {
-            double xDiff = shape.getStart(Direction.Axis.X) * sideOffset.x + shape.getEnd(Direction.Axis.X) * (1 - sideOffset.x);
-            double yDiff = shape.getStart(Direction.Axis.Y) * sideOffset.y + shape.getEnd(Direction.Axis.Y) * (1 - sideOffset.y);
-            double zDiff = shape.getStart(Direction.Axis.Z) * sideOffset.z + shape.getEnd(Direction.Axis.Z) * (1 - sideOffset.z);
+            double xDiff = shape.getMinimum(Direction.Axis.X) * sideOffset.x + shape.getMaximum(Direction.Axis.X) * (1 - sideOffset.x);
+            double yDiff = shape.getMinimum(Direction.Axis.Y) * sideOffset.y + shape.getMaximum(Direction.Axis.Y) * (1 - sideOffset.y);
+            double zDiff = shape.getMinimum(Direction.Axis.Z) * sideOffset.z + shape.getMaximum(Direction.Axis.Z) * (1 - sideOffset.z);
             possibleRotation = reachableOffset(entity, pos, new Vec3d(pos).add(xDiff, yDiff, zDiff), blockReachDistance);
             if (possibleRotation.isPresent()) {
                 return possibleRotation;
@@ -205,14 +207,14 @@ public final class RotationUtils {
      * @return The optional rotation
      */
     public static Optional<Rotation> reachableOffset(Entity entity, BlockPos pos, Vec3d offsetPos, double blockReachDistance) {
-        Rotation rotation = calcRotationFromVec3d(entity.getEyePosition(1.0F), offsetPos, new Rotation(entity.rotationYaw, entity.rotationPitch));
-        RayTraceResult result = RayTraceUtils.rayTraceTowards(entity, rotation, blockReachDistance);
+        Rotation rotation = calcRotationFromVec3d(entity.getCameraPosVec(1.0F), offsetPos, new Rotation(entity.yaw, entity.pitch));
+        HitResult result = RayTraceUtils.rayTraceTowards(entity, rotation, blockReachDistance);
         //System.out.println(result);
-        if (result != null && result.getType() == RayTraceResult.Type.BLOCK) {
-            if (((BlockRayTraceResult) result).getPos().equals(pos)) {
+        if (result != null && result.getType() == HitResult.Type.BLOCK) {
+            if (((BlockHitResult) result).getPos().equals(pos)) {
                 return Optional.of(rotation);
             }
-            if (entity.world.getBlockState(pos).getBlock() instanceof FireBlock && ((BlockRayTraceResult) result).getPos().equals(pos.down())) {
+            if (entity.world.getBlockState(pos).getBlock() instanceof FireBlock && ((BlockHitResult) result).getPos().equals(pos.down())) {
                 return Optional.of(rotation);
             }
         }

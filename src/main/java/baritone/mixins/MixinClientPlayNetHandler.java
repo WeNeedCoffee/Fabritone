@@ -107,6 +107,7 @@ public class MixinClientPlayNetHandler {
         }
     }
 
+
     @Inject(
             method = "onCombatEvent",
             at = @At(

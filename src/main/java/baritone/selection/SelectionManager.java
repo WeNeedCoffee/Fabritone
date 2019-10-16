@@ -4,7 +4,7 @@ import baritone.Baritone;
 import baritone.api.selection.ISelection;
 import baritone.api.selection.ISelectionManager;
 import baritone.api.utils.BetterBlockPos;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.Direction;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -69,7 +69,7 @@ public class SelectionManager implements ISelectionManager {
     }
 
     @Override
-    public synchronized ISelection expand(ISelection selection, EnumFacing direction, int blocks) {
+    public synchronized ISelection expand(ISelection selection, Direction direction, int blocks) {
         for (ListIterator<ISelection> it = selections.listIterator(); it.hasNext(); ) {
             ISelection current = it.next();
 
@@ -85,7 +85,7 @@ public class SelectionManager implements ISelectionManager {
     }
 
     @Override
-    public synchronized ISelection contract(ISelection selection, EnumFacing direction, int blocks) {
+    public synchronized ISelection contract(ISelection selection, Direction direction, int blocks) {
         for (ListIterator<ISelection> it = selections.listIterator(); it.hasNext(); ) {
             ISelection current = it.next();
 
@@ -101,7 +101,7 @@ public class SelectionManager implements ISelectionManager {
     }
 
     @Override
-    public synchronized ISelection shift(ISelection selection, EnumFacing direction, int blocks) {
+    public synchronized ISelection shift(ISelection selection, Direction direction, int blocks) {
         for (ListIterator<ISelection> it = selections.listIterator(); it.hasNext(); ) {
             ISelection current = it.next();
 

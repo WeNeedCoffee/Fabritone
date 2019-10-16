@@ -18,16 +18,16 @@
 package baritone.api.utils;
 
 import baritone.api.BaritoneAPI;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 /**
- * An ease-of-access interface to provide the {@link Minecraft} game instance,
+ * An ease-of-access interface to provide the {@link MinecraftClient} game instance,
  * chat and console logging mechanisms, and the Baritone chat prefix.
  *
  * @author Brady
@@ -43,19 +43,19 @@ public interface Helper {
     /**
      * Instance of the game
      */
-    Minecraft mc = Minecraft.getInstance();
+    MinecraftClient mc = MinecraftClient.getInstance();
 
-    static ITextComponent getPrefix() {
+    static Text getPrefix() {
         // Inner text component
-        ITextComponent baritone = new StringTextComponent(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
-        baritone.getStyle().setColor(TextFormatting.LIGHT_PURPLE);
+        Text baritone = new LiteralText(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
+        baritone.getStyle().setColor(Formatting.LIGHT_PURPLE);
 
         // Outer brackets
-        ITextComponent prefix = new StringTextComponent("");
-        prefix.getStyle().setColor(TextFormatting.DARK_PURPLE);
-        prefix.appendText("[");
-        prefix.appendSibling(baritone);
-        prefix.appendText("]");
+        Text prefix = new LiteralText("");
+        prefix.getStyle().setColor(Formatting.DARK_PURPLE);
+        prefix.append("[");
+        prefix.append(baritone);
+        prefix.append("]");
 
         return prefix;
     }
@@ -79,11 +79,11 @@ public interface Helper {
      *
      * @param components The components to send
      */
-    default void logDirect(ITextComponent... components) {
-        ITextComponent component = new StringTextComponent("");
-        component.appendSibling(getPrefix());
-        component.appendSibling(new StringTextComponent(" "));
-        Arrays.asList(components).forEach(component::appendSibling);
+    default void logDirect(Text... components) {
+        Text component = new LiteralText("");
+        component.append(getPrefix());
+        component.append(new LiteralText(" "));
+        Arrays.asList(components).forEach(component::append);
         mc.execute(() -> BaritoneAPI.getSettings().logger.value.accept(component));
     }
 
@@ -94,9 +94,9 @@ public interface Helper {
      * @param message The message to display in chat
      * @param color   The color to print that message in
      */
-    default void logDirect(String message, TextFormatting color) {
+    default void logDirect(String message, Formatting color) {
         Stream.of(message.split("\n")).forEach(line -> {
-            ITextComponent component = new StringTextComponent(line.replace("\t", "    "));
+            Text component = new LiteralText(line.replace("\t", "    "));
             component.getStyle().setColor(color);
             logDirect(component);
         });
@@ -109,6 +109,6 @@ public interface Helper {
      * @param message The message to display in chat
      */
     default void logDirect(String message) {
-        logDirect(message, TextFormatting.GRAY);
+        logDirect(message, Formatting.GRAY);
     }
 }

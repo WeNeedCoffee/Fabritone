@@ -112,13 +112,13 @@ public class MovementTraverse extends Movement {
             if (srcDown == Blocks.LADDER || srcDown == Blocks.VINE) {
                 return COST_INF;
             }
-            if (MovementHelper.isReplacable(destX, y - 1, destZ, destOn, context.bsi)) {
+            if (MovementHelper.isReplaceable(destX, y - 1, destZ, destOn, context.bsi)) {
                 boolean throughWater = MovementHelper.isWater(pb0) || MovementHelper.isWater(pb1);
                 if (MovementHelper.isWater(destOn) && throughWater) {
                     // this happens when assume walk on water is true and this is a traverse in water, which isn't allowed
                     return COST_INF;
                 }
-                double placeCost = context.costOfPlacingAt(destX, y - 1, destZ);
+                double placeCost = context.costOfPlacingAt(destX, y - 1, destZ, destOn);
                 if (placeCost >= COST_INF) {
                     return COST_INF;
                 }
@@ -261,6 +261,10 @@ public class MovementTraverse extends Movement {
             BlockPos against = positionsToBreak[0];
             if (feet.getY() != dest.getY() && ladder && (destDown.getBlock() == Blocks.VINE || destDown.getBlock() == Blocks.LADDER)) {
                 against = destDown.getBlock() == Blocks.VINE ? MovementPillar.getAgainst(new CalculationContext(baritone), dest.down()) : dest.offset(destDown.get(LadderBlock.FACING).getOpposite());
+                if (against == null) {
+                    logDirect("Unable to climb vines. Consider disabling allowVines.");
+                    return state.setStatus(MovementStatus.UNREACHABLE);
+                }
             }
             MovementHelper.moveTowards(ctx, state, against);
             return state;

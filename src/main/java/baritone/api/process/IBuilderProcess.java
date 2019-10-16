@@ -19,7 +19,7 @@ package baritone.api.process;
 
 import baritone.api.schematic.ISchematic;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 
@@ -52,7 +52,7 @@ public interface IBuilderProcess extends IBaritoneProcess {
     boolean build(String name, File schematic, Vec3i origin);
 
     default boolean build(String schematicFile, BlockPos origin) {
-        File file = new File(new File(Minecraft.getInstance().gameDir, "schematics"), schematicFile);
+        File file = new File(new File(MinecraftClient.getInstance().runDirectory, "schematics"), schematicFile);
         return build(schematicFile, file, origin);
     }
 

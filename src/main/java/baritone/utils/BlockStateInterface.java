@@ -29,7 +29,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.*;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
 
 /**
  * Wraps get for chuck caching capability
@@ -41,7 +43,7 @@ public class BlockStateInterface {
     private final ClientChunkManager provider;
     private final WorldData worldData;
 
-    private WorldChunk prev = null;
+    private Chunk prev = null;
     private CachedRegion prevCached = null;
 
     private final boolean useTheRealWorld;
@@ -95,7 +97,7 @@ public class BlockStateInterface {
         }
 
         if (useTheRealWorld) {
-            WorldChunk cached = prev;
+            Chunk cached = prev;
             // there's great cache locality in block state lookups
             // generally it's within each movement
             // if it's the same chunk as last time
@@ -105,8 +107,8 @@ public class BlockStateInterface {
             if (cached != null && cached.getPos().x == x >> 4 && cached.getPos().z == z >> 4) {
                 return getFromChunk(cached, x, y, z);
             }
-            WorldChunk chunk = provider.method_2857(x >> 4, z >> 4, ChunkStatus.FULL, false);
-            if (chunk != null && !chunk.isEmpty()) {
+            Chunk chunk = provider.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, false);
+            if (chunk != null) {
                 prev = chunk;
                 return getFromChunk(chunk, x, y, z);
             }
@@ -133,12 +135,12 @@ public class BlockStateInterface {
     }
 
     public boolean isLoaded(int x, int z) {
-        WorldChunk prevChunk = prev;
+        Chunk prevChunk = prev;
         if (prevChunk != null && prevChunk.getPos().x == x >> 4 && prevChunk.getPos().z == z >> 4) {
             return true;
         }
-        prevChunk = provider.method_2857(x >> 4, z >> 4, ChunkStatus.FULL, false);
-        if (prevChunk != null && !prevChunk.isEmpty()) {
+        prevChunk = provider.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, false);
+        if (prevChunk != null) {
             prev = prevChunk;
             return true;
         }
@@ -158,7 +160,7 @@ public class BlockStateInterface {
     }
 
     // get the block at x,y,z from this chunk WITHOUT creating a single blockpos object
-    public static BlockState getFromChunk(WorldChunk chunk, int x, int y, int z) {
+    public static BlockState getFromChunk(Chunk chunk, int x, int y, int z) {
         ChunkSection section = chunk.getSectionArray()[y >> 4];
         if (ChunkSection.isEmpty(section)) {
             return AIR;

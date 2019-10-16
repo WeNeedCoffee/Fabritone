@@ -19,9 +19,13 @@ package baritone.api.utils;
 
 import baritone.api.cache.IWorldData;
 import net.minecraft.block.SlabBlock;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
@@ -42,7 +46,7 @@ public interface IPlayerContext {
     World world();
 
     default Iterable<Entity> entities() {
-        return ((ClientWorld) world()).getAllEntities();
+        return ((ClientWorld) world()).getEntities();
     }
 
     default Stream<Entity> entitiesStream() {
@@ -52,11 +56,11 @@ public interface IPlayerContext {
 
     IWorldData worldData();
 
-    RayTraceResult objectMouseOver();
+    HitResult objectMouseOver();
 
     default BetterBlockPos playerFeet() {
         // TODO find a better way to deal with soul sand!!!!!
-        BetterBlockPos feet = new BetterBlockPos(player().posX, player().posY + 0.1251, player().posZ);
+        BetterBlockPos feet = new BetterBlockPos(player().x, player().y + 0.1251, player().z);
 
         // sometimes when calling this from another thread or while world is null, it'll throw a NullPointerException
         // that causes the game to immediately crash
@@ -76,15 +80,15 @@ public interface IPlayerContext {
     }
 
     default Vec3d playerFeetAsVec() {
-        return new Vec3d(player().posX, player().posY, player().posZ);
+        return new Vec3d(player().x, player().y, player().z);
     }
 
     default Vec3d playerHead() {
-        return new Vec3d(player().posX, player().posY + player().getEyeHeight(), player().posZ);
+        return new Vec3d(player().x, player().y + player().getEyeHeight(EntityPose.STANDING), player().z);
     }
 
     default Rotation playerRotations() {
-        return new Rotation(player().rotationYaw, player().rotationPitch);
+        return new Rotation(player().yaw, player().pitch);
     }
 
     /**
@@ -93,9 +97,9 @@ public interface IPlayerContext {
      * @return The position of the highlighted block
      */
     default Optional<BlockPos> getSelectedBlock() {
-        RayTraceResult result = objectMouseOver();
-        if (result != null && result.getType() == RayTraceResult.Type.BLOCK) {
-            return Optional.of(((BlockRayTraceResult) result).getPos());
+        HitResult result = objectMouseOver();
+        if (result != null && result.getType() == HitResult.Type.BLOCK) {
+            return Optional.of(((BlockHitResult) result).getBlockPos());
         }
         return Optional.empty();
     }
@@ -110,9 +114,9 @@ public interface IPlayerContext {
      * @return The entity
      */
     default Optional<Entity> getSelectedEntity() {
-        RayTraceResult result = objectMouseOver();
-        if (result != null && result.getType() == RayTraceResult.Type.ENTITY) {
-            return Optional.of(((EntityRayTraceResult) result).getEntity());
+        HitResult result = objectMouseOver();
+        if (result != null && result.getType() == HitResult.Type.ENTITY) {
+            return Optional.of(((EntityHitResult) result).getEntity());
         }
         return Optional.empty();
     }

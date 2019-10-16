@@ -148,12 +148,12 @@ public class MovementParkour extends Movement {
         // time 2 pop off with that dank skynet parkour place
         int destX = x + 4 * xDiff;
         int destZ = z + 4 * zDiff;
-        double placeCost = context.costOfPlacingAt(destX, y - 1, destZ);
+        BlockState toReplace = context.get(destX, y - 1, destZ);
+        double placeCost = context.costOfPlacingAt(destX, y - 1, destZ, toReplace);
         if (placeCost >= COST_INF) {
             return;
         }
-        BlockState toReplace = context.get(destX, y - 1, destZ);
-        if (!MovementHelper.isReplacable(destX, y - 1, destZ, toReplace, context.bsi)) {
+        if (!MovementHelper.isReplaceable(destX, y - 1, destZ, toReplace, context.bsi)) {
             return;
         }
         if (!checkOvershootSafety(context.bsi, destX + xDiff, y, destZ + zDiff)) {

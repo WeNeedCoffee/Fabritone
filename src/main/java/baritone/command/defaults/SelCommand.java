@@ -30,7 +30,7 @@ import baritone.api.utils.BlockOptionalMetaLookup;
 import baritone.api.schematic.ISchematic;
 import baritone.api.command.Command;
 import baritone.api.command.datatypes.ForBlockOptionalMeta;
-import baritone.api.command.datatypes.ForEnumFacing;
+import baritone.api.command.datatypes.ForDirection;
 import baritone.api.command.datatypes.RelativeBlockPos;
 import baritone.api.command.exception.CommandException;
 import baritone.api.command.exception.CommandInvalidStateException;
@@ -38,10 +38,10 @@ import baritone.api.command.exception.CommandInvalidTypeException;
 import baritone.api.command.argument.IArgConsumer;
 import baritone.api.command.helpers.TabCompleteHelper;
 import baritone.utils.IRenderer;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.block.Blocks;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3i;
 
 import java.awt.*;
@@ -68,7 +68,7 @@ public class SelCommand extends Command {
                 float lineWidth = Baritone.settings().selectionLineWidth.value;
                 boolean ignoreDepth = Baritone.settings().renderSelectionIgnoreDepth.value;
                 IRenderer.startLines(color, opacity, lineWidth, ignoreDepth);
-                IRenderer.drawAABB(new AxisAlignedBB(pos1, pos1.add(1, 1, 1)));
+                IRenderer.drawAABB(new Box(pos1, pos1.add(1, 1, 1)));
                 IRenderer.endLines(ignoreDepth);
             }
         });
@@ -84,7 +84,7 @@ public class SelCommand extends Command {
             if (action == Action.POS2 && pos1 == null) {
                 throw new CommandInvalidStateException("Set pos1 first before using pos2");
             }
-            BetterBlockPos playerPos = mc.getRenderViewEntity() != null ? BetterBlockPos.from(new BlockPos(mc.getRenderViewEntity())) : ctx.playerFeet();
+            BetterBlockPos playerPos = mc.getCameraEntity() != null ? BetterBlockPos.from(new BlockPos(mc.getCameraEntity())) : ctx.playerFeet();
             BetterBlockPos pos = args.hasAny() ? args.getDatatypePost(RelativeBlockPos.INSTANCE, playerPos) : playerPos;
             args.requireMax(0);
             if (action == Action.POS1) {
@@ -165,7 +165,7 @@ public class SelCommand extends Command {
             if (transformTarget == null) {
                 throw new CommandInvalidStateException("Invalid transform type");
             }
-            EnumFacing direction = args.getDatatypeFor(ForEnumFacing.INSTANCE);
+            Direction direction = args.getDatatypeFor(ForDirection.INSTANCE);
             int blocks = args.getAs(Integer.class);
             ISelection[] selections = manager.getSelections();
             if (selections.length < 1) {
@@ -217,7 +217,7 @@ public class SelCommand extends Command {
                     } else {
                         TransformTarget target = TransformTarget.getByName(args.getString());
                         if (target != null && args.hasExactlyOne()) {
-                            return args.tabCompleteDatatype(ForEnumFacing.INSTANCE);
+                            return args.tabCompleteDatatype(ForDirection.INSTANCE);
                         }
                     }
                 }

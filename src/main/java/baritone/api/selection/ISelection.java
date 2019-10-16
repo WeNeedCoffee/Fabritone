@@ -18,8 +18,8 @@
 package baritone.api.selection;
 
 import baritone.api.utils.BetterBlockPos;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3i;
 
 /**
@@ -54,9 +54,9 @@ public interface ISelection {
     Vec3i size();
 
     /**
-     * @return An {@link AxisAlignedBB} encompassing all blocks in this selection.
+     * @return An {@link net.minecraft.util.math.Box} encompassing all blocks in this selection.
      */
-    AxisAlignedBB aabb();
+    Box aabb();
 
     /**
      * Returns a new {@link ISelection} expanded in the specified direction by the specified number of blocks.

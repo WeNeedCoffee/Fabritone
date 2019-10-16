@@ -27,7 +27,6 @@ import baritone.cache.WorldProvider;
 import baritone.utils.BlockStateInterface;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -72,6 +71,11 @@ public final class GameEventHandler implements IEventBus, Helper {
     }
 
     @Override
+    public void onPreTabComplete(TabCompleteEvent event) {
+        listeners.forEach(l -> l.onPreTabComplete(event));
+    }
+
+    @Override
     public final void onChunkEvent(ChunkEvent event) {
         EventState state = event.getState();
         ChunkEvent.Type type = event.getType();
@@ -90,7 +94,7 @@ public final class GameEventHandler implements IEventBus, Helper {
 
         if (isPostPopulate || isPreUnload) {
             baritone.getWorldProvider().ifWorldLoaded(worldData -> {
-                WorldChunk chunk = world.method_8497(event.getX(), event.getZ());
+                Chunk chunk = world.getChunk(event.getX(), event.getZ());
                 worldData.getCachedWorld().queueForPacking(chunk);
             });
         }

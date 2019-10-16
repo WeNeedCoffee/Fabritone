@@ -61,6 +61,7 @@ public class CalculationContext {
     public final boolean allowParkourAscend;
     public final boolean assumeWalkOnWater;
     public final boolean allowDiagonalDescend;
+    public final boolean allowDiagonalAscend;
     public final boolean allowDownward;
     public final int maxFallHeightNoWater;
     public final int maxFallHeightBucket;
@@ -94,6 +95,7 @@ public class CalculationContext {
         this.allowParkourAscend = Baritone.settings().allowParkourAscend.value;
         this.assumeWalkOnWater = Baritone.settings().assumeWalkOnWater.value;
         this.allowDiagonalDescend = Baritone.settings().allowDiagonalDescend.value;
+        this.allowDiagonalAscend = Baritone.settings().allowDiagonalAscend.value;
         this.allowDownward = Baritone.settings().allowDownward.value;
         this.maxFallHeightNoWater = Baritone.settings().maxFallHeightNoWater.value;
         this.maxFallHeightBucket = Baritone.settings().maxFallHeightBucket.value;
@@ -133,7 +135,7 @@ public class CalculationContext {
         return get(x, y, z).getBlock();
     }
 
-    public double costOfPlacingAt(int x, int y, int z) {
+    public double costOfPlacingAt(int x, int y, int z, BlockState current) {
         if (!hasThrowaway) { // only true if allowPlace is true, see constructor
             return COST_INF;
         }
@@ -147,7 +149,7 @@ public class CalculationContext {
         return placeBlockCost;
     }
 
-    public double breakCostMultiplierAt(int x, int y, int z) {
+    public double breakCostMultiplierAt(int x, int y, int z, BlockState current) {
         if (!allowBreak) {
             return COST_INF;
         }

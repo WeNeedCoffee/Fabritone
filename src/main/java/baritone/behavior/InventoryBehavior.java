@@ -27,6 +27,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.container.SlotActionType;
 import net.minecraft.item.*;
 import net.minecraft.util.DefaultedList;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.OptionalInt;
@@ -34,6 +38,7 @@ import java.util.Random;
 import java.util.function.Predicate;
 
 public final class InventoryBehavior extends Behavior {
+
     public InventoryBehavior(Baritone baritone) {
         super(baritone);
     }
@@ -46,7 +51,7 @@ public final class InventoryBehavior extends Behavior {
         if (event.getType() == TickEvent.Type.OUT) {
             return;
         }
-        if (ctx.player().container != ctx.player().playerContainer) {
+        if (ctx.player().container != ctx.player().container) {
             // we have a crafting table or a chest or something open
             return;
         }
@@ -101,7 +106,7 @@ public final class InventoryBehavior extends Behavior {
         return -1;
     }
 
-    private int bestToolAgainst(Block against, Class<? extends ToolItem> klass) {
+    private int bestToolAgainst(Block against, Class<? extends ToolItem> cla$$) {
         DefaultedList<ItemStack> invy = ctx.player().inventory.main;
         int bestInd = -1;
         double bestSpeed = -1;
@@ -110,7 +115,7 @@ public final class InventoryBehavior extends Behavior {
             if (stack.isEmpty()) {
                 continue;
             }
-            if (klass.isInstance(stack.getItem())) {
+            if (cla$$.isInstance(stack.getItem())) {
                 double speed = ToolSet.calculateSpeedVsBlock(stack, against.getDefaultState()); // takes into account enchants
                 if (speed > bestSpeed) {
                     bestSpeed = speed;
@@ -131,9 +136,12 @@ public final class InventoryBehavior extends Behavior {
     }
 
     public boolean selectThrowawayForLocation(boolean select, int x, int y, int z) {
-        BlockState maybe = baritone.getBuilderProcess().placeAt(x, y, z);
-        if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock().equals(maybe.getBlock()))) {
+        BlockState maybe = baritone.getBuilderProcess().placeAt(x, y, z, baritone.bsi.get0(x, y, z));
+        if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && maybe.equals(((BlockItem) stack.getItem()).getBlock().getPlacementState(new ItemPlacementContext(new ItemUsageContext(ctx.world(), ctx.player(), Hand.MAIN_HAND, stack, new BlockHitResult(new Vec3d(ctx.player().x, ctx.player().y, ctx.player().z), Direction.UP, ctx.playerFeet(), false)) {}))))) {
             return true; // gotem
+        }
+        if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock().equals(maybe.getBlock()))) {
+            return true;
         }
         for (Item item : Baritone.settings().acceptableThrowawayItems.value) {
             if (throwaway(select, stack -> item.equals(stack.getItem()))) {
@@ -146,7 +154,7 @@ public final class InventoryBehavior extends Behavior {
     public boolean throwaway(boolean select, Predicate<? super ItemStack> desired) {
         ClientPlayerEntity p = ctx.player();
         DefaultedList<ItemStack> inv = p.inventory.main;
-        for (byte i = 0; i < 9; i++) {
+        for (int i = 0; i < 9; i++) {
             ItemStack item = inv.get(i);
             // this usage of settings() is okay because it's only called once during pathing
             // (while creating the CalculationContext at the very beginning)
@@ -166,7 +174,7 @@ public final class InventoryBehavior extends Behavior {
             // we've already checked above ^ and the main hand can't possible have an acceptablethrowawayitem
             // so we need to select in the main hand something that doesn't right click
             // so not a shovel, not a hoe, not a block, etc
-            for (byte i = 0; i < 9; i++) {
+            for (int i = 0; i < 9; i++) {
                 ItemStack item = inv.get(i);
                 if (item.isEmpty() || item.getItem() instanceof PickaxeItem) {
                     if (select) {

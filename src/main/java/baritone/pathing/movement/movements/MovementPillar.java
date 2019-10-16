@@ -85,7 +85,7 @@ public class MovementPillar extends Movement {
         double placeCost = 0;
         if (!ladder) {
             // we need to place a block where we started to jump on it
-            placeCost = context.costOfPlacingAt(x, y, z);
+            placeCost = context.costOfPlacingAt(x, y, z, fromState);
             if (placeCost >= COST_INF) {
                 return COST_INF;
             }
@@ -193,7 +193,7 @@ public class MovementPillar extends Movement {
         if (ladder) {
             BlockPos against = vine ? getAgainst(new CalculationContext(baritone), src) : src.offset(fromDown.get(LadderBlock.FACING).getOpposite());
             if (against == null) {
-                logDebug("Unable to climb vines");
+                logDirect("Unable to climb vines. Consider disabling allowVines.");
                 return state.setStatus(MovementStatus.UNREACHABLE);
             }
 
@@ -218,7 +218,7 @@ public class MovementPillar extends Movement {
             }
 
 
-            state.setInput(Input.SNEAK, ctx.player().y > dest.getY() || ctx.player().y < src.getY() + 0.2D); // delay placement by 1 tick for ncp compatibility
+            state.setInput(Input.SNEAK, ctx.player().x > dest.getY() || ctx.player().y < src.getY() + 0.2D); // delay placement by 1 tick for ncp compatibility
             // since (lower down) we only right click once player.isSneaking, and that happens the tick after we request to sneak
 
             double diffX = ctx.player().x - (dest.getX() + 0.5);

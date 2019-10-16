@@ -18,8 +18,8 @@
 package baritone.api.event.listener;
 
 import baritone.api.event.events.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.world.ClientWorld;
@@ -35,7 +35,7 @@ public interface IGameEventListener {
      * Run once per game tick before screen input is handled.
      *
      * @param event The event
-     * @see Minecraft#runTick()
+     * @see MinecraftClient#runTick()
      */
     void onTick(TickEvent event);
 
@@ -125,9 +125,9 @@ public interface IGameEventListener {
     void onBlockInteract(BlockInteractEvent event);
 
     /**
-     * Called when the local player dies, as indicated by the creation of the {@link GuiGameOver} screen.
+     * Called when the local player dies, as indicated by the creation of the {@link DeathScreen} screen.
      *
-     * @see GuiGameOver
+     * @see DeathScreen
      */
     void onPlayerDeath();
 

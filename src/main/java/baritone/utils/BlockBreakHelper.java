@@ -22,8 +22,6 @@ import baritone.api.utils.IPlayerContext;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 
 /**
  * @author Brady
@@ -31,34 +29,43 @@ import net.minecraft.util.math.Direction;
  */
 public final class BlockBreakHelper implements Helper {
 
+    private final IPlayerContext ctx;
     private boolean didBreakLastTick;
 
-    private final IPlayerContext playerContext;
-
-    public BlockBreakHelper(IPlayerContext playerContext) {
-        this.playerContext = playerContext;
-    }
-
-    private void tryBreakBlock(BlockPos pos, Direction side) {
-        if (playerContext.playerController().onPlayerDamageBlock(pos, side)) {
-            playerContext.player().swingHand(Hand.MAIN_HAND);
-        }
+    BlockBreakHelper(IPlayerContext ctx) {
+        this.ctx = ctx;
     }
 
     public void stopBreakingBlock() {
         // The player controller will never be null, but the player can be
-        if (playerContext.player() != null) {
-            playerContext.playerController().resetBlockRemoving();
+        if (ctx.player() != null && didBreakLastTick) {
+            if (!ctx.playerController().hasBrokenBlock()) {
+                // insane bypass to check breaking succeeded
+                ctx.playerController().setHittingBlock(true);
+            }
+            ctx.playerController().resetBlockRemoving();
+            didBreakLastTick = false;
         }
     }
 
-
     public void tick(boolean isLeftClick) {
-        HitResult trace = playerContext.objectMouseOver();
+        HitResult trace = ctx.objectMouseOver();
         boolean isBlockTrace = trace != null && trace.getType() == HitResult.Type.BLOCK;
 
         if (isLeftClick && isBlockTrace) {
-            tryBreakBlock(((BlockHitResult) trace).getBlockPos(), ((BlockHitResult) trace).getSide());
+            if (!didBreakLastTick) {
+                ctx.playerController().syncHeldItem();
+                ctx.playerController().clickBlock(((BlockHitResult) trace).getBlockPos(), ((BlockHitResult) trace).getSide());
+                ctx.player().swingHand(Hand.MAIN_HAND);
+            }
+
+            // Attempt to break the block
+            if (ctx.playerController().onPlayerDamageBlock(((BlockHitResult) trace).getBlockPos(), ((BlockHitResult) trace).getSide())) {
+                ctx.player().swingHand(Hand.MAIN_HAND);
+            }
+
+            ctx.playerController().setHittingBlock(false);
+
             didBreakLastTick = true;
         } else if (didBreakLastTick) {
             stopBreakingBlock();

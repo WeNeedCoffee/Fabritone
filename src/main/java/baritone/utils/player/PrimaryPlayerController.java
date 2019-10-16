@@ -19,18 +19,20 @@ package baritone.utils.player;
 
 import baritone.api.utils.Helper;
 import baritone.api.utils.IPlayerController;
+import baritone.utils.accessor.IPlayerControllerMP;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.container.SlotActionType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
+
 
 /**
  * Implementation of {@link IPlayerController} that chains to the primary player controller's methods
@@ -41,6 +43,16 @@ import net.minecraft.world.World;
 public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     INSTANCE;
+
+    @Override
+    public void syncHeldItem() {
+        ((IPlayerControllerMP) mc.interactionManager).callSyncCurrentPlayItem();
+    }
+
+    @Override
+    public boolean hasBrokenBlock() {
+        return ((IPlayerControllerMP) mc.interactionManager).getCurrentBlock().getY() == -1;
+    }
 
     @Override
     public boolean onPlayerDamageBlock(BlockPos pos, Direction side) {
@@ -58,11 +70,6 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
     }
 
     @Override
-    public void setGameType(GameMode type) {
-        mc.interactionManager.setGameMode(type);
-    }
-
-    @Override
     public GameMode getGameType() {
         return mc.interactionManager.getCurrentGameMode();
     }
@@ -76,5 +83,15 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
     @Override
     public ActionResult processRightClick(ClientPlayerEntity player, World world, Hand hand) {
         return mc.interactionManager.interactItem(player, world, hand);
+    }
+
+    @Override
+    public boolean clickBlock(BlockPos loc, Direction face) {
+        return mc.interactionManager.attackBlock(loc, face);
+    }
+
+    @Override
+    public void setHittingBlock(boolean hittingBlock) {
+        ((IPlayerControllerMP) mc.interactionManager).setIsHittingBlock(hittingBlock);
     }
 }

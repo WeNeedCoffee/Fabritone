@@ -32,11 +32,11 @@ import baritone.api.command.exception.CommandInvalidTypeException;
 import baritone.api.command.argument.IArgConsumer;
 import baritone.api.command.helpers.Paginator;
 import baritone.api.command.helpers.TabCompleteHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.event.ClickEvent;
-import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.util.Formatting;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -57,22 +57,22 @@ public class WaypointsCommand extends Command {
         if (action == null) {
             throw new CommandInvalidTypeException(args.consumed(), "an action");
         }
-        BiFunction<IWaypoint, Action, ITextComponent> toComponent = (waypoint, _action) -> {
-            ITextComponent component = new TextComponentString("");
-            ITextComponent tagComponent = new TextComponentString(waypoint.getTag().name() + " ");
-            tagComponent.getStyle().setColor(TextFormatting.GRAY);
+        BiFunction<IWaypoint, Action, Text> toComponent = (waypoint, _action) -> {
+            Text component = new LiteralText("");
+            Text tagComponent = new LiteralText(waypoint.getTag().name() + " ");
+            tagComponent.getStyle().setColor(Formatting.GRAY);
             String name = waypoint.getName();
-            ITextComponent nameComponent = new TextComponentString(!name.isEmpty() ? name : "<empty>");
-            nameComponent.getStyle().setColor(!name.isEmpty() ? TextFormatting.GRAY : TextFormatting.DARK_GRAY);
-            ITextComponent timestamp = new TextComponentString(" @ " + new Date(waypoint.getCreationTimestamp()));
-            timestamp.getStyle().setColor(TextFormatting.DARK_GRAY);
-            component.appendSibling(tagComponent);
-            component.appendSibling(nameComponent);
-            component.appendSibling(timestamp);
+            Text nameComponent = new LiteralText(!name.isEmpty() ? name : "<empty>");
+            nameComponent.getStyle().setColor(!name.isEmpty() ? Formatting.GRAY : Formatting.DARK_GRAY);
+            Text timestamp = new LiteralText(" @ " + new Date(waypoint.getCreationTimestamp()));
+            timestamp.getStyle().setColor(Formatting.DARK_GRAY);
+            component.append(tagComponent);
+            component.append(nameComponent);
+            component.append(timestamp);
             component.getStyle()
                     .setHoverEvent(new HoverEvent(
                             HoverEvent.Action.SHOW_TEXT,
-                            new TextComponentString("Click to select")
+                            new LiteralText("Click to select")
                     ))
                     .setClickEvent(new ClickEvent(
                             ClickEvent.Action.RUN_COMMAND,
@@ -87,7 +87,7 @@ public class WaypointsCommand extends Command {
                     );
             return component;
         };
-        Function<IWaypoint, ITextComponent> transform = waypoint ->
+        Function<IWaypoint, Text> transform = waypoint ->
                 toComponent.apply(waypoint, action == Action.LIST ? Action.INFO : action);
         if (action == Action.LIST) {
             IWaypoint.Tag tag = args.hasAny() ? IWaypoint.Tag.getByName(args.peekString()) : null;
@@ -136,9 +136,9 @@ public class WaypointsCommand extends Command {
             args.requireMax(0);
             IWaypoint waypoint = new Waypoint(name, tag, pos);
             ForWaypoints.waypoints(this.baritone).addWaypoint(waypoint);
-            ITextComponent component = new TextComponentString("Waypoint added: ");
-            component.getStyle().setColor(TextFormatting.GRAY);
-            component.appendSibling(toComponent.apply(waypoint, Action.INFO));
+            Text component = new LiteralText("Waypoint added: ");
+            component.getStyle().setColor(Formatting.GRAY);
+            component.append(toComponent.apply(waypoint, Action.INFO));
             logDirect(component);
         } else if (action == Action.CLEAR) {
             args.requireMax(1);
@@ -194,7 +194,7 @@ public class WaypointsCommand extends Command {
                 if (action == Action.INFO) {
                     logDirect(transform.apply(waypoint));
                     logDirect(String.format("Position: %s", waypoint.getLocation()));
-                    ITextComponent deleteComponent = new TextComponentString("Click to delete this waypoint");
+                    Text deleteComponent = new LiteralText("Click to delete this waypoint");
                     deleteComponent.getStyle().setClickEvent(new ClickEvent(
                             ClickEvent.Action.RUN_COMMAND,
                             String.format(
@@ -205,7 +205,7 @@ public class WaypointsCommand extends Command {
                                     waypoint.getCreationTimestamp()
                             )
                     ));
-                    ITextComponent goalComponent = new TextComponentString("Click to set goal to this waypoint");
+                    Text goalComponent = new LiteralText("Click to set goal to this waypoint");
                     goalComponent.getStyle().setClickEvent(new ClickEvent(
                             ClickEvent.Action.RUN_COMMAND,
                             String.format(
@@ -216,7 +216,7 @@ public class WaypointsCommand extends Command {
                                     waypoint.getCreationTimestamp()
                             )
                     ));
-                    ITextComponent backComponent = new TextComponentString("Click to return to the waypoints list");
+                    Text backComponent = new LiteralText("Click to return to the waypoints list");
                     backComponent.getStyle().setClickEvent(new ClickEvent(
                             ClickEvent.Action.RUN_COMMAND,
                             String.format(

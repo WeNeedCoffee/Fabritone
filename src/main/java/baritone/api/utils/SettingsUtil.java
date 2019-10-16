@@ -20,12 +20,13 @@ package baritone.api.utils;
 import baritone.api.BaritoneAPI;
 import baritone.api.Settings;
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -49,7 +50,7 @@ import java.util.stream.Stream;
 
 public class SettingsUtil {
 
-    private static final Path SETTINGS_PATH = Minecraft.getInstance().gameDir.toPath().resolve("baritone").resolve("settings.txt");
+    private static final Path SETTINGS_PATH = MinecraftClient.getInstance().runDirectory.toPath().resolve("baritone").resolve("settings.txt");
     private static final Pattern SETTING_PATTERN = Pattern.compile("^(?<setting>[^ ]+) +(?<value>.+)"); // key and value split by the first space
 
 
@@ -236,8 +237,8 @@ public class SettingsUtil {
         ),
         ITEM(
                 Item.class,
-                str -> Registry.ITEM.getOrDefault(new ResourceLocation(str.trim())), // TODO this now returns AIR on failure instead of null, is that an issue?
-                item -> Registry.ITEM.getKey(item).toString()
+                str -> Registry.ITEM.get(new Identifier(str.trim())), // TODO this now returns AIR on failure instead of null, is that an issue?
+                item -> Registry.ITEM.getId(item).toString()
         ),
         LIST() {
             @Override

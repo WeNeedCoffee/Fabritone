@@ -17,7 +17,7 @@
 
 package baritone.mixins;
 
-import baritone.process.MineProcess;
+import baritone.api.utils.BlockOptionalMeta;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.loot.LootManager;
@@ -51,7 +51,7 @@ public class MixinLootContext {
     )
     private LootManager getLootTableManager(MinecraftServer server) {
         if (server == null) {
-            return MineProcess.getManager();
+            return BlockOptionalMeta.getManager();
         }
         return server.getLootManager();
     }

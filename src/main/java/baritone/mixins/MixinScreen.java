@@ -15,30 +15,19 @@
  * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package baritone.utils.pathing;
+package baritone.mixins;
 
-import baritone.api.pathing.movement.ActionCosts;
+import baritone.utils.accessor.IGuiScreen;
+import net.minecraft.client.gui.screen.Screen;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
-/**
- * The result of a calculated movement, with destination x, y, z, and the cost of performing the movement
- *
- * @author leijurv
- */
-public final class MutableMoveResult {
+import java.net.URI;
 
-    public int x;
-    public int y;
-    public int z;
-    public double cost;
+@Mixin(Screen.class)
+public abstract class MixinScreen implements IGuiScreen {
 
-    public MutableMoveResult() {
-        reset();
-    }
-
-    public final void reset() {
-        x = 0;
-        y = 0;
-        z = 0;
-        cost = ActionCosts.COST_INF;
-    }
+    @Override
+    @Invoker("openLink")
+    public abstract void openLink(URI url);
 }

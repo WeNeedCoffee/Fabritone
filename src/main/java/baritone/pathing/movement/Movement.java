@@ -26,9 +26,9 @@ import baritone.api.utils.input.Input;
 import baritone.behavior.PathingBehavior;
 import baritone.utils.BlockStateInterface;
 import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.*;
 

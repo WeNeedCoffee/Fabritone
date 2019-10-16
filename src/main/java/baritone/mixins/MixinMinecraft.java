@@ -59,7 +59,7 @@ public class MixinMinecraft {
             at = @At("RETURN")
     )
     private void postInit(CallbackInfo ci) {
-        ((Baritone) BaritoneAPI.getProvider().getPrimaryBaritone()).init();
+        BaritoneAPI.getProvider().getPrimaryBaritone();
     }
 
     @Inject(
@@ -140,7 +140,7 @@ public class MixinMinecraft {
                     target = "net/minecraft/client/gui/screen/Screen.passEvents:Z"
             )
     )
-    private boolean passEvents(Screen screen) {
+    private boolean isAllowUserInput(Screen screen) {
         // allow user input is only the primary baritone
         return (BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().getCurrent() != null && player != null) || screen.passEvents;
     }

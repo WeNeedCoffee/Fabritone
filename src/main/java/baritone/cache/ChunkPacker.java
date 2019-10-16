@@ -23,7 +23,6 @@ import baritone.utils.pathing.PathingBlockType;
 import net.minecraft.block.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.WorldChunk;
@@ -85,13 +84,14 @@ public final class ChunkPacker {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         //long end = System.nanoTime() / 1000000L;
         //System.out.println("Chunk packing took " + (end - start) + "ms for " + chunk.x + "," + chunk.z);
         BlockState[] blocks = new BlockState[256];
 
+        // @formatter:off
         for (int z = 0; z < 16; z++) {
-            https:
-//www.ibm.com/developerworks/library/j-perry-writing-good-java-code/index.html
+            https://www.ibm.com/developerworks/library/j-perry-writing-good-java-code/index.html
             for (int x = 0; x < 16; x++) {
                 for (int y = 255; y >= 0; y--) {
                     int index = CachedChunk.getPositionIndex(x, y, z);
@@ -103,6 +103,7 @@ public final class ChunkPacker {
                 blocks[z << 4 | x] = Blocks.AIR.getDefaultState();
             }
         }
+        // @formatter:on
         return new CachedChunk(chunk.getPos().x, chunk.getPos().z, bitSet, blocks, specialBlocks, System.currentTimeMillis());
     }
 

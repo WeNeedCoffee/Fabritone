@@ -21,10 +21,10 @@ import baritone.api.utils.SettingsUtil;
 import baritone.api.utils.TypeUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.text.ITextComponent;
 
 import java.awt.*;
 import java.lang.reflect.Field;
@@ -926,7 +926,7 @@ public final class Settings {
      * via {@link Consumer#andThen(Consumer)} or it can completely be overriden via setting
      * {@link Setting#value};
      */
-    public final Setting<Consumer<ITextComponent>> logger = new Setting<>(Minecraft.getInstance().ingameGUI.getChatGUI()::printChatMessage);
+    public final Setting<Consumer<Text>> logger = new Setting<>(MinecraftClient.getInstance().inGameHud.getChatHud()::addMessage);
 
     /**
      * The size of the box that is rendered when the current goal is a GoalYLevel

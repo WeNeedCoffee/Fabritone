@@ -61,6 +61,9 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
     private static final Goal GOAL = new GoalBlock(69, 69, 420);
     private static final int MAX_TICKS = 3300;
 
+    /**
+     * Called right after the {@link GameOptions} object is created in the {@link net.minecraft.client.MinecraftClient} instance.
+     */
     public void onPreInit() {
         if (!BaritoneAutoTest.ENABLE_AUTO_TEST) {
             return;
@@ -82,6 +85,7 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
         s.tutorialStep = TutorialStep.NONE;
         s.hudHidden = true;
         s.fov = 30.0F;
+
     }
 
     @Override
@@ -97,6 +101,7 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
 
         IntegratedServer server = mc.getServer();
 
+
         // If the integrated server is launched and the world has initialized, set the spawn point
         // to our defined starting position
         if (server != null && server.getWorld(DimensionType.OVERWORLD) != null) {
@@ -107,6 +112,7 @@ public class BaritoneAutoTest implements AbstractGameEventListener, Helper {
                 throw new IllegalStateException(result + "");
             }
         }
+
 
         if (event.getType() == TickEvent.Type.IN) { // If we're in-game
 

@@ -1,13 +1,15 @@
-{
+{mixins
   "required": true,
-  "package": "baritone.mixins",
+  "package": "baritone.launch.mixins",
   "compatibilityLevel": "JAVA_8",
   "verbose": false,
   "injectors": {
     "maxShiftBy": 2
   },
   "client": [
-    "MixinBlockPos",
+    "MixinBitArray",
+    "MixinBlockStateContainer",
+    "MixinChatScreen",
     "MixinChunkArray",
     "MixinClientChunkProvider",
     "MixinClientPlayerEntity",
@@ -15,9 +17,12 @@
     "MixinEntity",
     "MixinEntityRenderManager",
     "MixinGameRenderer",
+    "MixinItemStack",
     "MixinLivingEntity",
     "MixinLootContext",
     "MixinMinecraft",
-    "MixinNetworkManager"
+    "MixinNetworkManager",
+    "MixinPlayerController",
+    "MixinScreen"
   ]
 }

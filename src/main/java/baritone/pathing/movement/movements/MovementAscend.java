@@ -30,9 +30,8 @@ import baritone.utils.BlockStateInterface;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FallingBlock;
-import com.google.common.collect.ImmutableSet;
 import net.minecraft.util.math.Direction;
-
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 public class MovementAscend extends Movement {
@@ -69,11 +68,11 @@ public class MovementAscend extends Movement {
         BlockState toPlace = context.get(destX, y, destZ);
         double additionalPlacementCost = 0;
         if (!MovementHelper.canWalkOn(context.bsi, destX, y, destZ, toPlace)) {
-            additionalPlacementCost = context.costOfPlacingAt(destX, y, destZ);
+            additionalPlacementCost = context.costOfPlacingAt(destX, y, destZ, toPlace);
             if (additionalPlacementCost >= COST_INF) {
                 return COST_INF;
             }
-            if (!MovementHelper.isReplacable(destX, y, destZ, toPlace, context.bsi)) {
+            if (!MovementHelper.isReplaceable(destX, y, destZ, toPlace, context.bsi)) {
                 return COST_INF;
             }
             boolean foundPlaceOption = false;

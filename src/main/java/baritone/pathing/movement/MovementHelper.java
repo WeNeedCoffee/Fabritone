@@ -18,6 +18,7 @@
 package baritone.pathing.movement;
 
 import baritone.Baritone;
+import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.pathing.movement.ActionCosts;
 import baritone.api.pathing.movement.MovementStatus;
@@ -32,8 +33,8 @@ import net.minecraft.fluid.*;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Optional;
@@ -179,7 +180,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         return state.canPlaceAtSide(null, null, BlockPlacementEnvironment.LAND);
     }
 
-    static boolean isReplacable(int x, int y, int z, BlockState state, BlockStateInterface bsi) {
+    static boolean isReplaceable(int x, int y, int z, BlockState state, BlockStateInterface bsi) {
         // for MovementTraverse and MovementAscend
         // block double plant defaults to true when the block doesn't match, so don't need to check that case
         // all other overrides just return true or false
@@ -206,6 +207,11 @@ public interface MovementHelper extends ActionCosts, Helper {
             return true;
         }
         return state.getMaterial().isReplaceable();
+    }
+
+    @Deprecated
+    static boolean isReplacable(int x, int y, int z, BlockState state, BlockStateInterface bsi) {
+        return isReplaceable(x, y, z, state, bsi);
     }
 
     static boolean isDoorPassable(IPlayerContext ctx, BlockPos doorPos, BlockPos playerPos) {
@@ -372,7 +378,7 @@ public interface MovementHelper extends ActionCosts, Helper {
             if (!state.getFluidState().isEmpty()) {
                 return COST_INF;
             }
-            double mult = context.breakCostMultiplierAt(x, y, z);
+            double mult = context.breakCostMultiplierAt(x, y, z, state);
             if (mult >= COST_INF) {
                 return COST_INF;
             }
@@ -409,7 +415,7 @@ public interface MovementHelper extends ActionCosts, Helper {
      * @param b   the blockstate to mine
      */
     static void switchToBestToolFor(IPlayerContext ctx, BlockState b) {
-        switchToBestToolFor(ctx, b, new ToolSet(ctx.player()));
+        switchToBestToolFor(ctx, b, new ToolSet(ctx.player()), BaritoneAPI.getSettings().preferSilkTouch.value);
     }
 
     /**
@@ -419,8 +425,8 @@ public interface MovementHelper extends ActionCosts, Helper {
      * @param b   the blockstate to mine
      * @param ts  previously calculated ToolSet
      */
-    static void switchToBestToolFor(IPlayerContext ctx, BlockState b, ToolSet ts) {
-        ctx.player().inventory.selectedSlot = ts.getBestSlot(b.getBlock());
+    static void switchToBestToolFor(IPlayerContext ctx, BlockState b, ToolSet ts, boolean preferSilkTouch) {
+        ctx.player().inventory.selectedSlot = ts.getBestSlot(b.getBlock(), preferSilkTouch);
     }
 
     static void moveTowards(IPlayerContext ctx, MovementState state, BlockPos pos) {
@@ -512,7 +518,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         Optional<Rotation> direct = RotationUtils.reachable(ctx, placeAt); // we assume that if there is a block there, it must be replacable
         boolean found = false;
         if (direct.isPresent()) {
-            state.setTarget(new MovementState.MovementTarget(direct.get(), true));
+            state.setTarget(new MovementTarget(direct.get(), true));
             found = true;
         }
         for (int i = 0; i < 5; i++) {
@@ -528,8 +534,8 @@ public interface MovementHelper extends ActionCosts, Helper {
                 double faceZ = (placeAt.getZ() + against1.getZ() + 1.0D) * 0.5D;
                 Rotation place = RotationUtils.calcRotationFromVec3d(ctx.playerHead(), new Vec3d(faceX, faceY, faceZ), ctx.playerRotations());
                 HitResult res = RayTraceUtils.rayTraceTowards(ctx.player(), place, ctx.playerController().getBlockReachDistance());
-                if (res != null && res.getType() == HitResult.Type.BLOCK && ((BlockHitResult) res).getBlockPos().equals(against1) && ((BlockHitResult) res).getBlockPos().offset(((BlockHitResult) res).getSide()).equals(placeAt)) {
-                    state.setTarget(new MovementState.MovementTarget(place, true));
+                if (res != null && res.getType() == HitResult.Type.BLOCK && ((BlockHitResult) res).getPos().equals(against1) && ((BlockHitResult) res).getBlockPos().offset(((BlockHitResult) res).getSide()).equals(placeAt)) {
+                    state.setTarget(new MovementTarget(place, true));
                     found = true;
 
                     if (!preferDown) {
