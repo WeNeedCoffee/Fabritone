@@ -61,7 +61,7 @@ public class MixinClientPlayerEntity {
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "net/minecraft/client/entity/player/ClientPlayerEntity.isPassenger()Z",
+                    target = "net/minecraft/client/network/ClientPlayerEntity.hasVehicle()Z",
                     shift = At.Shift.BY,
                     by = -3
             )
@@ -77,7 +77,7 @@ public class MixinClientPlayerEntity {
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "net/minecraft/client/entity/player/ClientPlayerEntity.onUpdateWalkingPlayer()V",
+                    target = "net/minecraft/client/network/ClientPlayerEntity.sendMovementPackets()V",
                     shift = At.Shift.BY,
                     by = 2
             )
@@ -90,7 +90,7 @@ public class MixinClientPlayerEntity {
     }
 
     @Redirect(
-            method = "livingTick",
+            method = "tickMovement",
             at = @At(
                     value = "FIELD",
                     target = "net/minecraft/entity/player/PlayerAbilities.allowFlying:Z"
@@ -105,10 +105,10 @@ public class MixinClientPlayerEntity {
     }
 
     @Redirect(
-            method = "livingTick",
+            method = "tickMovement",
             at = @At(
                     value = "INVOKE",
-                    target = "net/minecraft/client/settings/KeyBinding.isKeyDown()Z"
+                    target = "net/minecraft/client/options/KeyBinding.isPressed()Z"
             )
     )
     private boolean isKeyDown(KeyBinding keyBinding) {
@@ -129,7 +129,7 @@ public class MixinClientPlayerEntity {
     }
 
     @Inject(
-            method = "updateRidden",
+            method = "tickRiding",
             at = @At(
                     value = "HEAD"
             )

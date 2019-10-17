@@ -46,12 +46,12 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     @Override
     public void syncHeldItem() {
-        ((IPlayerControllerMP) mc.interactionManager).callSyncCurrentPlayItem();
+        ((IPlayerControllerMP) mc.interactionManager).syncSelectedSlot();
     }
 
     @Override
     public boolean hasBrokenBlock() {
-        return ((IPlayerControllerMP) mc.interactionManager).getCurrentBlock().getY() == -1;
+        return ((IPlayerControllerMP) mc.interactionManager).getCurrentBreakingPos().getY() == -1;
     }
 
     @Override
@@ -92,6 +92,6 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     @Override
     public void setHittingBlock(boolean hittingBlock) {
-        ((IPlayerControllerMP) mc.interactionManager).setIsHittingBlock(hittingBlock);
+        ((IPlayerControllerMP) mc.interactionManager).setBreakingBlock(hittingBlock);
     }
 }

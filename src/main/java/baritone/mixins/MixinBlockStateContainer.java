@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class MixinBlockStateContainer implements IBlockStateContainer {
 
     @Shadow
-    protected PackedIntegerArray storage;
+    protected PackedIntegerArray data;
 
     @Shadow
     protected Palette<BlockState> palette;
@@ -42,6 +42,6 @@ public abstract class MixinBlockStateContainer implements IBlockStateContainer {
 
     @Override
     public int[] storageArray() {
-        return ((IBitArray) storage).toArray();
+        return ((IBitArray) data).toArray();
     }
 }

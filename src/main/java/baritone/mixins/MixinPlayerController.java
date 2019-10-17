@@ -29,13 +29,13 @@ public abstract class MixinPlayerController implements IPlayerControllerMP {
 
     @Accessor
     @Override
-    public abstract void setIsHittingBlock(boolean isHittingBlock);
+    public abstract void setBreakingBlock(boolean breakingBlock);
 
     @Accessor
     @Override
-    public abstract BlockPos getCurrentBlock();
+    public abstract BlockPos getCurrentBreakingPos();
 
     @Invoker
     @Override
-    public abstract void callSyncCurrentPlayItem();
+    public abstract void syncSelectedSlot();
 }

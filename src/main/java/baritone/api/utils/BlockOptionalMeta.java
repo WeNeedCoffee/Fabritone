@@ -280,15 +280,15 @@ public final class BlockOptionalMeta {
 
     public static LootManager getManager() {
         if (manager == null) {
-            ResourcePackList rpl = new ResourcePackList<>(ResourcePackInfo::new);
-            rpl.addPackFinder(new ServerPackFinder());
-            rpl.reloadPacksFromFinders();
-            ResourcePack thePack = ((ResourcePackInfo) rpl.getAllPacks().iterator().next()).getResourcePack();
-            ReloadableResourceManager resourceManager = new SimpleReloadableResourceManager(ResourceType.SERVER_DATA, null);
+            ResourcePackContainerManager rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
+            rpl.addCreator(new DefaultResourcePackCreator());
+            rpl.callCreators();
+            ResourcePack thePack = ((ResourcePackContainer) rpl.getEnabledContainers().iterator().next()).createResourcePack();
+            ReloadableResourceManager resourceManager = new ReloadableResourceManagerImpl(ResourceType.SERVER_DATA, null);
             manager = new LootManager();
-            resourceManager.addReloadListener(manager);
+            resourceManager.registerListener(manager);
             try {
-                resourceManager.reloadResourcesAndThen(new ThreadPerTaskExecutor(Thread::new), new ThreadPerTaskExecutor(Thread::new), Collections.singletonList(thePack), CompletableFuture.completedFuture(Unit.INSTANCE)).get();
+                resourceManager.beginReload(new ThreadPerTaskExecutor(Thread::new), new ThreadPerTaskExecutor(Thread::new), Collections.singletonList(thePack), CompletableFuture.completedFuture(Unit.INSTANCE)).get();
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }

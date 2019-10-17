@@ -26,7 +26,7 @@ import baritone.api.utils.Helper;
 import baritone.cache.WorldProvider;
 import baritone.utils.BlockStateInterface;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -94,7 +94,7 @@ public final class GameEventHandler implements IEventBus, Helper {
 
         if (isPostPopulate || isPreUnload) {
             baritone.getWorldProvider().ifWorldLoaded(worldData -> {
-                Chunk chunk = world.getChunk(event.getX(), event.getZ());
+                WorldChunk chunk = world.method_8497(event.getX(), event.getZ());
                 worldData.getCachedWorld().queueForPacking(chunk);
             });
         }

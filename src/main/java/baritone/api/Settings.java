@@ -618,7 +618,7 @@ public final class Settings {
     /**
      * The command prefix for chat control
      */
-    public final Setting<String> prefix = new Setting<>("#");
+    public final Setting<String> prefix = new Setting<>("@");
 
     /**
      * Use a short Baritone prefix [B] instead of [Baritone] when logging to chat

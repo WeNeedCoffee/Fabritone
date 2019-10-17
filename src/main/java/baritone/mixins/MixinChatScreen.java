@@ -44,23 +44,23 @@ import java.util.stream.Stream;
 public class MixinChatScreen {
 
     @Shadow
-    protected TextFieldWidget inputField;
+    protected TextFieldWidget chatField;
 
     @Shadow
     @Final
-    protected List<String> commandUsage;
+    protected List<String> commandExceptions;
 
     @Shadow
-    private CompletableFuture<Suggestions> pendingSuggestions;
+    private CompletableFuture<Suggestions> suggestionsFuture;
 
     @Inject(
-            method = "updateSuggestion",
+            method = "updateCommand",
             at = @At("HEAD"),
             cancellable = true
     )
     private void preUpdateSuggestion(CallbackInfo ci) {
         // Anything that is present in the input text before the cursor position
-        String prefix = this.inputField.getText().substring(0, Math.min(this.inputField.getText().length(), this.inputField.getCursor()));
+        String prefix = this.chatField.getText().substring(0, Math.min(this.chatField.getText().length(), this.chatField.getCursor()));
 
         TabCompleteEvent event = new TabCompleteEvent(prefix);
         BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().onPreTabComplete(event);
@@ -74,14 +74,14 @@ public class MixinChatScreen {
             ci.cancel();
 
             // TODO: Support populating the command usage
-            this.commandUsage.clear();
+            this.commandExceptions.clear();
 
             if (event.completions.length == 0) {
-                this.pendingSuggestions = Suggestions.empty();
+                this.suggestionsFuture = Suggestions.empty();
             } else {
-                int offset = this.inputField.getText().endsWith(" ")
-                        ? this.inputField.getCursor()
-                        : this.inputField.getText().lastIndexOf(" ") + 1; // If there is no space this is still 0 haha yes
+                int offset = this.chatField.getText().endsWith(" ")
+                        ? this.chatField.getCursor()
+                        : this.chatField.getText().lastIndexOf(" ") + 1; // If there is no space this is still 0 haha yes
 
                 List<Suggestion> suggestionList = Stream.of(event.completions)
                         .map(s -> new Suggestion(StringRange.between(offset, offset + s.length()), s))
@@ -91,8 +91,8 @@ public class MixinChatScreen {
                         StringRange.between(offset, offset + suggestionList.stream().mapToInt(s -> s.getText().length()).max().orElse(0)),
                         suggestionList);
 
-                this.pendingSuggestions = new CompletableFuture<>();
-                this.pendingSuggestions.complete(suggestions);
+                this.suggestionsFuture = new CompletableFuture<>();
+                this.suggestionsFuture.complete(suggestions);
             }
         }
     }
