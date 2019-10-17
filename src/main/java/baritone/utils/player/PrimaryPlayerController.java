@@ -46,7 +46,7 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     @Override
     public void syncHeldItem() {
-        ((IPlayerControllerMP) mc.interactionManager).syncSelectedSlot();
+        ((IPlayerControllerMP) mc.interactionManager).callSyncSelectedSlot();
     }
 
     @Override

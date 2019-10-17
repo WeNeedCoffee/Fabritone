@@ -1,6 +1,6 @@
-{mixins
+{
   "required": true,
-  "package": "baritone.launch.mixins",
+  "package": "baritone.mixins",
   "compatibilityLevel": "JAVA_8",
   "verbose": false,
   "injectors": {

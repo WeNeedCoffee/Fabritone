@@ -25,5 +25,5 @@ public interface IPlayerControllerMP {
 
     BlockPos getCurrentBreakingPos();
 
-    void syncSelectedSlot();
+    void callSyncSelectedSlot();
 }

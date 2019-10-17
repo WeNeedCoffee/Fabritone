@@ -37,5 +37,5 @@ public abstract class MixinPlayerController implements IPlayerControllerMP {
 
     @Invoker
     @Override
-    public abstract void syncSelectedSlot();
+    public abstract void callSyncSelectedSlot();
 }

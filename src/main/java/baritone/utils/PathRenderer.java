@@ -185,13 +185,13 @@ public final class PathRenderer implements IRenderer, Helper {
         boolean renderPathAsFrickinThingy = !settings.renderPathAsLine.value;
 
         buffer.begin(renderPathAsFrickinThingy ? GL_LINE_STRIP : GL_LINES, VertexFormats.POSITION);
-        buffer.postPosition(x1 + 0.5D - vpX, y1 + 0.5D - vpY, z1 + 0.5D - vpZ);
-        buffer.postPosition(x2 + 0.5D - vpX, y2 + 0.5D - vpY, z2 + 0.5D - vpZ);
+        buffer.vertex(x1 + 0.5D - vpX, y1 + 0.5D - vpY, z1 + 0.5D - vpZ).next();
+        buffer.vertex(x2 + 0.5D - vpX, y2 + 0.5D - vpY, z2 + 0.5D - vpZ).next();
 
         if (renderPathAsFrickinThingy) {
-            buffer.postPosition(x2 + 0.5D - vpX, y2 + 0.53D - vpY, z2 + 0.5D - vpZ);
-            buffer.postPosition(x1 + 0.5D - vpX, y1 + 0.53D - vpY, z1 + 0.5D - vpZ);
-            buffer.postPosition(x1 + 0.5D - vpX, y1 + 0.5D - vpY, z1 + 0.5D - vpZ);
+            buffer.vertex(x2 + 0.5D - vpX, y2 + 0.53D - vpY, z2 + 0.5D - vpZ).next();
+            buffer.vertex(x1 + 0.5D - vpX, y1 + 0.53D - vpY, z1 + 0.5D - vpZ).next();
+            buffer.vertex(x1 + 0.5D - vpX, y1 + 0.5D - vpY, z1 + 0.5D - vpZ).next();
         }
     }
 
@@ -312,14 +312,14 @@ public final class PathRenderer implements IRenderer, Helper {
 
 
         buffer.begin(GL_LINES, VertexFormats.POSITION);
-        buffer.postPosition(minX, minY, minZ);
-        buffer.postPosition(minX, maxY, minZ);
-        buffer.postPosition(maxX, minY, minZ);
-        buffer.postPosition(maxX, maxY, minZ);
-        buffer.postPosition(maxX, minY, maxZ);
-        buffer.postPosition(maxX, maxY, maxZ);
-        buffer.postPosition(minX, minY, maxZ);
-        buffer.postPosition(minX, maxY, maxZ);
+        buffer.vertex(minX, minY, minZ).next();
+        buffer.vertex(minX, maxY, minZ).next();
+        buffer.vertex(maxX, minY, minZ).next();
+        buffer.vertex(maxX, maxY, minZ).next();
+        buffer.vertex(maxX, minY, maxZ).next();
+        buffer.vertex(maxX, maxY, maxZ).next();
+        buffer.vertex(minX, minY, maxZ).next();
+        buffer.vertex(minX, maxY, maxZ).next();
         tessellator.draw();
 
         IRenderer.endLines(settings.renderGoalIgnoreDepth.value);
@@ -328,10 +328,10 @@ public final class PathRenderer implements IRenderer, Helper {
     private static void renderHorizontalQuad(double minX, double maxX, double minZ, double maxZ, double y) {
         if (y != 0) {
             buffer.begin(GL_LINE_LOOP, VertexFormats.POSITION);
-            buffer.postPosition(minX, y, minZ);
-            buffer.postPosition(maxX, y, minZ);
-            buffer.postPosition(maxX, y, maxZ);
-            buffer.postPosition(minX, y, maxZ);
+            buffer.vertex(minX, y, minZ).next();
+            buffer.vertex(maxX, y, minZ).next();
+            buffer.vertex(maxX, y, maxZ).next();
+            buffer.vertex(minX, y, maxZ).next();
             tessellator.draw();
         }
     }

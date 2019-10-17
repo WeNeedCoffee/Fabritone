@@ -77,32 +77,32 @@ public interface IRenderer {
 
         buffer.begin(GL_LINES, VertexFormats.POSITION);
         // bottom
-        buffer.postPosition(toDraw.minX, toDraw.minY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.minY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.minY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.minY, toDraw.maxZ);
-        buffer.postPosition(toDraw.maxX, toDraw.minY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.minY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.minY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.minY, toDraw.minZ);
+        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
         // top
-        buffer.postPosition(toDraw.minX, toDraw.maxY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.maxY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.maxY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.maxY, toDraw.maxZ);
-        buffer.postPosition(toDraw.maxX, toDraw.maxY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.maxY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.maxY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.maxY, toDraw.minZ);
+        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
         // corners
-        buffer.postPosition(toDraw.minX, toDraw.minY, toDraw.minZ);
-        buffer.postPosition(toDraw.minX, toDraw.maxY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.minY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.maxY, toDraw.minZ);
-        buffer.postPosition(toDraw.maxX, toDraw.minY, toDraw.maxZ);
-        buffer.postPosition(toDraw.maxX, toDraw.maxY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.minY, toDraw.maxZ);
-        buffer.postPosition(toDraw.minX, toDraw.maxY, toDraw.maxZ);
+        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
+        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
         tessellator.draw();
     }
 
