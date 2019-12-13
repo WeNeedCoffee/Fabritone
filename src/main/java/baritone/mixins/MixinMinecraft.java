@@ -134,7 +134,7 @@ public class MixinMinecraft {
             method = "tick",
             at = @At(
                     value = "FIELD",
-                    opcode = Opcodes.GETFIELD,
+                    opcode = 180,
                     target = "net/minecraft/client/gui/screen/Screen.passEvents:Z"
             )
     )
