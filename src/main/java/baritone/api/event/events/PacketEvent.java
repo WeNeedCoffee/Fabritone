@@ -39,7 +39,7 @@ public final class PacketEvent {
         this.packet = packet;
     }
 
-    public final ClientConnection getNetworkManager() {
+    public final ClientConnection getClientConnection() {
         return this.networkManager;
     }
 

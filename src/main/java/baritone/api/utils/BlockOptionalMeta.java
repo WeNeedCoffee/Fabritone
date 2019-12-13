@@ -31,7 +31,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.loot.*;
+import net.minecraft.world.loot.LootManager;
+import net.minecraft.world.loot.LootTables;
 import net.minecraft.world.loot.context.*;
 
 import java.util.*;
@@ -42,9 +43,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static net.minecraft.world.loot.LootTables.EMPTY;
-
 public final class BlockOptionalMeta {
+
     private final Block block;
     private final Set<BlockState> blockstates;
     private final ImmutableSet<Integer> stateHashes;
@@ -54,14 +54,14 @@ public final class BlockOptionalMeta {
     private static LootManager manager;
     private static Map<Block, List<Item>> drops = new HashMap<>();
 
-    public BlockOptionalMeta( Block block) {
+    public BlockOptionalMeta(Block block) {
         this.block = block;
         this.blockstates = getStates(block);
         this.stateHashes = getStateHashes(blockstates);
         this.stackHashes = getStackHashes(blockstates);
     }
 
-    public BlockOptionalMeta( String selector) {
+    public BlockOptionalMeta(String selector) {
         Matcher matcher = pattern.matcher(selector);
 
         if (!matcher.find()) {
@@ -76,7 +76,7 @@ public final class BlockOptionalMeta {
             throw new IllegalArgumentException("Invalid block ID");
         }
 
-        block = Registry.BLOCK.get(id);
+        block = Registry.BLOCK.getOrEmpty(id).orElse(null);
         blockstates = getStates(block);
         stateHashes = getStateHashes(blockstates);
         stackHashes = getStackHashes(blockstates);
@@ -172,12 +172,12 @@ public final class BlockOptionalMeta {
         normalizations = Collections.unmodifiableMap(_normalizations);
     }
 
-    private static <C extends Comparable<C>, P extends Property<C>> P castToProperty(Object value) {
+    private static <C extends Comparable<C>, P extends Property<C>> P castToIProperty(Object value) {
         //noinspection unchecked
         return (P) value;
     }
 
-    private static <C extends Comparable<C>, P extends Property<C>> C castToPropertyValue(P iproperty, Object value) {
+    private static <C extends Comparable<C>, P extends Property<C>> C castToIPropertyValue(P iproperty, Object value) {
         //noinspection unchecked
         return (C) value;
     }
@@ -190,22 +190,22 @@ public final class BlockOptionalMeta {
             if (normalizations.containsKey(property)) {
                 try {
                     newState = newState.with(
-                            castToProperty(property),
-                            castToPropertyValue(property, normalizations.get(property))
+                            castToIProperty(property),
+                            castToIPropertyValue(property, normalizations.get(property))
                     );
                 } catch (IllegalArgumentException ignored) {}
             } else if (normalizations.containsKey(state.get(property))) {
                 try {
                     newState = newState.with(
-                            castToProperty(property),
-                            castToPropertyValue(property, normalizations.get(state.get(property)))
+                            castToIProperty(property),
+                            castToIPropertyValue(property, normalizations.get(state.get(property)))
                     );
                 } catch (IllegalArgumentException ignored) {}
             } else if (normalizations.containsKey(valueClass)) {
                 try {
                     newState = newState.with(
-                            castToProperty(property),
-                            castToPropertyValue(property, normalizations.get(valueClass))
+                            castToIProperty(property),
+                            castToIPropertyValue(property, normalizations.get(valueClass))
                     );
                 } catch (IllegalArgumentException ignored) {}
             }
@@ -218,7 +218,7 @@ public final class BlockOptionalMeta {
         return state.hashCode();
     }
 
-    private static Set<BlockState> getStates( Block block) {
+    private static Set<BlockState> getStates(Block block) {
         return new HashSet<>(block.getStateFactory().getStates());
     }
 
@@ -247,11 +247,11 @@ public final class BlockOptionalMeta {
         return block;
     }
 
-    public boolean matches( Block block) {
+    public boolean matches(Block block) {
         return block == this.block;
     }
 
-    public boolean matches( BlockState blockstate) {
+    public boolean matches(BlockState blockstate) {
         Block block = blockstate.getBlock();
         return block == this.block && stateHashes.contains(blockstate.hashCode());
     }
@@ -283,7 +283,7 @@ public final class BlockOptionalMeta {
             ResourcePackContainerManager rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
             rpl.addCreator(new DefaultResourcePackCreator());
             rpl.callCreators();
-            ResourcePack thePack = ((ResourcePackContainer) rpl.getEnabledContainers().iterator().next()).createResourcePack();
+            ResourcePack thePack = ((ResourcePackContainer) rpl.getAlphabeticallyOrderedContainers().iterator().next()).createResourcePack();
             ReloadableResourceManager resourceManager = new ReloadableResourceManagerImpl(ResourceType.SERVER_DATA, null);
             manager = new LootManager();
             resourceManager.registerListener(manager);
@@ -299,7 +299,7 @@ public final class BlockOptionalMeta {
     private static synchronized List<Item> drops(Block b) {
         return drops.computeIfAbsent(b, block -> {
             Identifier lootTableLocation = block.getDropTableId();
-            if (lootTableLocation == EMPTY) {
+            if (lootTableLocation == LootTables.EMPTY) {
                 return Collections.emptyList();
             } else {
                 return getManager().getSupplier(lootTableLocation).getDrops(new LootContext.Builder(null).setRandom(new Random()).put(LootContextParameters.POSITION, BlockPos.ORIGIN).put(LootContextParameters.TOOL, ItemStack.EMPTY).putNullable(LootContextParameters.BLOCK_ENTITY, null).put(LootContextParameters.BLOCK_STATE, block.getDefaultState()).build(LootContextTypes.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList());

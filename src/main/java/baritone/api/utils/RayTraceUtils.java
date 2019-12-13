@@ -50,5 +50,4 @@ public final class RayTraceUtils {
         );
         return entity.world.rayTrace(new RayTraceContext(start, end, RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, entity));
     }
-
 }

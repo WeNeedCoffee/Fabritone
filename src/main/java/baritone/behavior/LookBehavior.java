@@ -55,7 +55,7 @@ public final class LookBehavior extends Behavior implements ILookBehavior {
             if (Math.abs(rand) < 0.1) {
                 rand *= 4;
             }
-            this.target = new Rotation(this.target.getYaw() + (float) (rand * Baritone.settings().randomLooking113.value), this.target.getPitch());
+            this.target = new Rotation(this.target.getYaw() + (float) (rand * Baritone.settings().randomLooking.value), this.target.getPitch());
         }
         this.force = force || !Baritone.settings().freeLook.value;
     }

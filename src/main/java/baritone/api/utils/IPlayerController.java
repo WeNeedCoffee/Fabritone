@@ -20,14 +20,16 @@ package baritone.api.utils;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.container.SlotActionType;
 import net.minecraft.entity.player.PlayerEntity;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
+
 /**
  * @author Brady
  * @since 12/14/2018

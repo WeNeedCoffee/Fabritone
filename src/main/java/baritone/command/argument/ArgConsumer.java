@@ -29,6 +29,7 @@ import baritone.api.command.exception.CommandNotEnoughArgumentsException;
 import baritone.api.command.exception.CommandTooManyArgumentsException;
 import baritone.api.command.argument.IArgConsumer;
 import baritone.api.command.manager.ICommandManager;
+import baritone.api.utils.Helper;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -316,7 +317,6 @@ public class ArgConsumer implements IArgConsumer {
         try {
             return datatype.apply(this.context, original);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new CommandInvalidTypeException(hasAny() ? peek() : consumed(), datatype.getClass().getSimpleName());
         }
     }

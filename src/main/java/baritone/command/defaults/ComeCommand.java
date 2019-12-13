@@ -44,7 +44,7 @@ public class ComeCommand extends Command {
             throw new CommandInvalidStateException("render view entity is null");
         }
         baritone.getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos(entity)));
-        logDirect("Coming");
+        logToast("Coming");
     }
 
     @Override

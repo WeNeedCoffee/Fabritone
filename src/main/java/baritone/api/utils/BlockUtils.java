@@ -17,7 +17,6 @@
 
 package baritone.api.utils;
 
-import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -58,10 +57,7 @@ public class BlockUtils {
         if (resourceCache.containsKey(name)) {
             return null; // cached as null
         }
-        block = Registry.BLOCK.get(Identifier.tryParse(name.contains(":") ? name : "minecraft:" + name));
-        if (block instanceof AirBlock && !name.equals("air")) {
-            block = null;
-        }
+        block = Registry.BLOCK.getOrEmpty(Identifier.tryParse(name.contains(":") ? name : "minecraft:" + name)).orElse(null);
         Map<String, Block> copy = new HashMap<>(resourceCache); // read only copy is safe, wont throw concurrentmodification
         copy.put(name, block);
         resourceCache = copy;

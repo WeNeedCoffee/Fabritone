@@ -54,7 +54,7 @@ public interface ISelection {
     Vec3i size();
 
     /**
-     * @return An {@link net.minecraft.util.math.Box} encompassing all blocks in this selection.
+     * @return An {@link Box} encompassing all blocks in this selection.
      */
     Box aabb();
 

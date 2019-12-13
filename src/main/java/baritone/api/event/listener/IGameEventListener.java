@@ -80,7 +80,7 @@ public interface IGameEventListener {
      * Runs before and after whenever a new world is loaded
      *
      * @param event The event
-     * @see Minecraft#loadWorld(ClientWorld, Screen)
+     * @see MinecraftClient#loadWorld(ClientWorld, Screen)
      */
     void onWorldEvent(WorldEvent event);
 
@@ -125,9 +125,9 @@ public interface IGameEventListener {
     void onBlockInteract(BlockInteractEvent event);
 
     /**
-     * Called when the local player dies, as indicated by the creation of the {@link DeathScreen} screen.
+     * Called when the local player dies, as indicated by the creation of the {@link GuiGameOver} screen.
      *
-     * @see DeathScreen
+     * @see GuiGameOver
      */
     void onPlayerDeath();
 

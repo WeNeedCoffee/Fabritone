@@ -36,7 +36,7 @@ public class FarmCommand extends Command {
     public void execute(String label, IArgConsumer args) throws CommandException {
         args.requireMax(0);
         baritone.getFarmProcess().farm();
-        logDirect("Farming");
+        logToast("Farming");
     }
 
     @Override

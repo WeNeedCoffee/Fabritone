@@ -158,7 +158,7 @@ public class SelCommand extends Command {
                 composite.put(schematic, min.x - origin.x, min.y - origin.y, min.z - origin.z);
             }
             baritone.getBuilderProcess().build("Fill", composite, origin);
-            logDirect("Filling now");
+            logToast("Filling now");
         } else if (action == Action.EXPAND || action == Action.CONTRACT || action == Action.SHIFT) {
             args.requireExactly(3);
             TransformTarget transformTarget = TransformTarget.getByName(args.getString());

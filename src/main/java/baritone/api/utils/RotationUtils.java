@@ -179,7 +179,7 @@ public final class RotationUtils {
         }
 
         BlockState state = entity.world.getBlockState(pos);
-        VoxelShape shape = state.getCollisionShape(entity.world, pos);
+        VoxelShape shape = state.getOutlineShape(entity.world, pos);
         if (shape.isEmpty()) {
             shape = VoxelShapes.fullCube();
         }

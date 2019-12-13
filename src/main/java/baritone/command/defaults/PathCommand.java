@@ -40,7 +40,7 @@ public class PathCommand extends Command {
         args.requireMax(0);
         WorldScanner.INSTANCE.repack(ctx);
         customGoalProcess.path();
-        logDirect("Now pathing");
+        logToast("Now pathing");
     }
 
     @Override

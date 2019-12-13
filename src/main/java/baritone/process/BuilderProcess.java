@@ -26,7 +26,10 @@ import baritone.api.process.IBuilderProcess;
 import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.api.schematic.ISchematic;
-import baritone.api.utils.*;
+import baritone.api.utils.BetterBlockPos;
+import baritone.api.utils.RayTraceUtils;
+import baritone.api.utils.Rotation;
+import baritone.api.utils.RotationUtils;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.Movement;
@@ -275,7 +278,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             if (!placementPlausible(new BetterBlockPos(x, y, z), toPlace)) {
                 continue;
             }
-            Box aabb = placeAgainstState.getCollisionShape(ctx.world(), placeAgainstPos).getBoundingBox();
+            Box aabb = placeAgainstState.getOutlineShape(ctx.world(), placeAgainstPos).getBoundingBox();
             for (Vec3d placementMultiplier : aabbSideMultipliers(against)) {
                 double placeX = placeAgainstPos.x + aabb.minX * placementMultiplier.x + aabb.maxX * (1 - placementMultiplier.x);
                 double placeY = placeAgainstPos.y + aabb.minY * placementMultiplier.y + aabb.maxY * (1 - placementMultiplier.y);

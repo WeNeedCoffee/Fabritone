@@ -85,7 +85,7 @@ public class PauseResumeCommands {
                     throw new CommandInvalidStateException("Already paused");
                 }
                 paused[0] = true;
-                logDirect("Paused");
+                logToast("Paused");
             }
 
             @Override
@@ -119,7 +119,7 @@ public class PauseResumeCommands {
                     throw new CommandInvalidStateException("Not paused");
                 }
                 paused[0] = false;
-                logDirect("Resumed");
+                logToast("Resumed");
             }
 
             @Override
@@ -146,7 +146,7 @@ public class PauseResumeCommands {
             @Override
             public void execute(String label, IArgConsumer args) throws CommandException {
                 args.requireMax(0);
-                logDirect(String.format("Baritone is %spaused", paused[0] ? "" : "not "));
+                logToast(String.format("Baritone is %spaused", paused[0] ? "" : "not "));
             }
 
             @Override

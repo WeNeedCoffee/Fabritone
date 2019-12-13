@@ -29,11 +29,12 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.util.Formatting;
-import net.minecraft.text.ClickEvent;
 import net.minecraft.world.RayTraceContext;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -92,9 +93,13 @@ public class GuiClick extends Screen implements Helper {
             if (clickStart != null && !clickStart.equals(currentMouseOver)) {
                 BaritoneAPI.getProvider().getPrimaryBaritone().getSelectionManager().removeAllSelections();
                 BaritoneAPI.getProvider().getPrimaryBaritone().getSelectionManager().addSelection(BetterBlockPos.from(clickStart), BetterBlockPos.from(currentMouseOver));
-                Text component = new LiteralText("Selection made! For usage: " + Baritone.settings().prefix.value + "help sel");
+                Helper.HELPER.logDirect("Selection made! For usage: " + Baritone.settings().prefix.value + "help sel");
+                Text component = new LiteralText("Or just click here");
+                Text hoverComponent = new LiteralText("Click me to run the command");
+                hoverComponent.getStyle().setColor(Formatting.GRAY);
                 component.getStyle()
                         .setColor(Formatting.WHITE)
+                        .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverComponent))
                         .setClickEvent(new ClickEvent(
                                 ClickEvent.Action.RUN_COMMAND,
                                 FORCE_COMMAND_PREFIX + "help sel"

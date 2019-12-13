@@ -45,7 +45,7 @@ public class ExploreCommand extends Command {
                 ? args.getDatatypePost(RelativeGoalXZ.INSTANCE, ctx.playerFeet())
                 : new GoalXZ(ctx.playerFeet());
         baritone.getExploreProcess().explore(goal.getX(), goal.getZ());
-        logDirect(String.format("Exploring from %s", goal.toString()));
+        logToast(String.format("Exploring from %s", goal.toString()));
     }
 
     @Override

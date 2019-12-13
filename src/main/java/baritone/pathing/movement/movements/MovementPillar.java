@@ -218,7 +218,7 @@ public class MovementPillar extends Movement {
             }
 
 
-            state.setInput(Input.SNEAK, ctx.player().x > dest.getY() || ctx.player().y < src.getY() + 0.2D); // delay placement by 1 tick for ncp compatibility
+            state.setInput(Input.SNEAK, ctx.player().y > dest.getY() || ctx.player().y < src.getY() + 0.2D); // delay placement by 1 tick for ncp compatibility
             // since (lower down) we only right click once player.isSneaking, and that happens the tick after we request to sneak
 
             double diffX = ctx.player().x - (dest.getX() + 0.5);

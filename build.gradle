@@ -1,19 +1,34 @@
 plugins {
-    id 'fabric-loom' version '0.2.5-SNAPSHOT'
+    id 'fabric-loom' version '0.2.7-SNAPSHOT'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-version = "1.2.10"
+version = "1.4.3"
 group = "me.deftware"
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    from(sourceSets.main.resources.srcDirs) {
+        include "fabric.mod.json"
+        expand "version": project.version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "fabric.mod.json"
+    }
 }
 
 jar {
     from "LICENSE"
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }

@@ -17,8 +17,11 @@
 
 package baritone.api.utils;
 
+import baritone.Baritone;
 import baritone.api.BaritoneAPI;
+import baritone.api.utils.gui.BaritoneToast;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.toast.ToastManager;
 import net.minecraft.text.Text;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Formatting;
@@ -58,6 +61,43 @@ public interface Helper {
         prefix.append("]");
 
         return prefix;
+    }
+
+    /**
+     * Send a message to the toaster to show it as a popup
+     *
+     * @param title The title to display in popup as textcomponent
+     * @param message The message to display in popup as textcomponent
+     */
+    default void logToast(Text title, Text message){
+        ToastManager guitoast = MinecraftClient.getInstance().getToastManager();
+        if(Baritone.settings().allowToast.value) {
+            BaritoneToast.addOrUpdate(guitoast, title, message, Baritone.settings().toastTimer.value);
+        }
+    }
+
+    /**
+     * Send a message to the toaster to show it as a popup
+     *
+     * @param title The title to display in popup (in default, baritone prefix)
+     * @param message The message to display in popup
+     */
+    default void logToast(String title, String message){
+        Text titleLine = new LiteralText(title);
+        Text subtitle = new LiteralText(message);
+        logToast(titleLine,subtitle);
+    }
+
+    /**
+     * Send a message to the toaster to show it as a popup
+     * Send components to popup with the [Baritone] prefix (title)
+     *
+     * @param message The message to display in popup
+     */
+    default void logToast(String message){
+        Text title = Helper.getPrefix();
+        Text subtitle = new LiteralText(message);
+        logToast(title,subtitle);
     }
 
     /**

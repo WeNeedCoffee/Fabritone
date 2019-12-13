@@ -17,7 +17,6 @@
 
 package baritone.mixins;
 
-import baritone.Baritone;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.event.events.BlockInteractEvent;
@@ -33,7 +32,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import org.spongepowered.asm.lib.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -77,7 +75,7 @@ public class MixinMinecraft {
             method = "tick",
             at = @At(
                     value = "FIELD",
-                    opcode = Opcodes.GETFIELD,
+                    opcode = 180,
                     target = "net/minecraft/client/MinecraftClient.currentScreen:Lnet/minecraft/client/gui/screen/Screen;",
                     ordinal = 5,
                     shift = At.Shift.BY,

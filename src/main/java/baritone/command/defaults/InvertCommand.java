@@ -50,7 +50,7 @@ public class InvertCommand extends Command {
             goal = new GoalInverted(goal);
         }
         customGoalProcess.setGoalAndPath(goal);
-        logDirect(String.format("Goal: %s", goal.toString()));
+        logToast(String.format("Goal: %s", goal.toString()));
     }
 
     @Override

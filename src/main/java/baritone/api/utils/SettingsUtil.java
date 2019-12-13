@@ -26,7 +26,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
 
 import java.awt.*;
 import java.io.BufferedReader;

@@ -22,10 +22,7 @@ import net.minecraft.block.SlabBlock;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.hit.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
@@ -84,7 +81,7 @@ public interface IPlayerContext {
     }
 
     default Vec3d playerHead() {
-        return new Vec3d(player().x, player().y + player().getEyeHeight(EntityPose.STANDING), player().z);
+        return new Vec3d(player().x, player().y + player().getStandingEyeHeight(), player().z);
     }
 
     default Rotation playerRotations() {

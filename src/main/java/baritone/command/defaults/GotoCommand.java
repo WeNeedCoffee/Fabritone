@@ -26,8 +26,10 @@ import baritone.api.command.datatypes.RelativeGoal;
 import baritone.api.command.exception.CommandException;
 import baritone.api.command.argument.IArgConsumer;
 import baritone.api.pathing.goals.Goal;
+import baritone.api.process.ICustomGoalProcess;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.BlockOptionalMeta;
+import baritone.cache.WorldScanner;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,10 +43,16 @@ public class GotoCommand extends Command {
 
     @Override
     public void execute(String label, IArgConsumer args) throws CommandException {
+        if(!args.hasAny()){
+            ICustomGoalProcess customGoalProcess = baritone.getCustomGoalProcess();
+            WorldScanner.INSTANCE.repack(ctx);
+            customGoalProcess.path();
+            logToast("Going to current goal");
+        }
         if (args.peekDatatypeOrNull(RelativeCoordinate.INSTANCE) != null) { // if we have a numeric first argument...
             BetterBlockPos origin = baritone.getPlayerContext().playerFeet();
             Goal goal = args.getDatatypePostOrNull(RelativeGoal.INSTANCE, origin);
-            logDirect(String.format("Going to: %s", goal.toString()));
+            logToast(String.format("Going to: %s", goal.toString()));
             baritone.getCustomGoalProcess().setGoalAndPath(goal);
             return;
         }
@@ -73,6 +81,7 @@ public class GotoCommand extends Command {
                 "Wherever a coordinate is expected, you can use ~ just like in regular Minecraft commands. Or, you can just use regular numbers.",
                 "",
                 "Usage:",
+                "> goto - current set goal",
                 "> goto <block> - Go to a block, wherever it is in the world",
                 "> goto <y> - Go to a Y level",
                 "> goto <x> <z> - Go to an X,Z position",

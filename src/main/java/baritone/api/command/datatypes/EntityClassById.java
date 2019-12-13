@@ -32,7 +32,7 @@ public enum EntityClassById implements IDatatypeFor<EntityType> {
     public EntityType get(IDatatypeContext ctx) throws CommandException {
         Identifier id = new Identifier(ctx.getConsumer().getString());
         EntityType entity;
-        if ((entity = Registry.ENTITY_TYPE.get(id)) == null || id == null) {
+        if ((entity = Registry.ENTITY_TYPE.getOrEmpty(id).orElse(null)) == null) {
             throw new IllegalArgumentException("no entity found by that id");
         }
         return entity;
@@ -41,7 +41,7 @@ public enum EntityClassById implements IDatatypeFor<EntityType> {
     @Override
     public Stream<String> tabComplete(IDatatypeContext ctx) throws CommandException {
         return new TabCompleteHelper()
-                .append(Registry.ENTITY_TYPE.stream().map(Object::toString))
+                .append(Registry.ENTITY_TYPE.getIds().stream().map(Object::toString))
                 .filterPrefixNamespaced(ctx.getConsumer().getString())
                 .sortAlphabetically()
                 .stream();

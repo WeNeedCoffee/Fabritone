@@ -42,7 +42,7 @@ public class TunnelCommand extends Command {
                 ctx.player().getHorizontalFacing()
         );
         baritone.getCustomGoalProcess().setGoalAndPath(goal);
-        logDirect(String.format("Goal: %s", goal.toString()));
+        logToast(String.format("Goal: %s", goal.toString()));
     }
 
     @Override
