@@ -17,6 +17,7 @@
 
 package baritone.api.utils;
 
+import baritone.api.BaritoneAPI;
 import baritone.api.utils.accessor.IItemStack;
 import com.google.common.collect.ImmutableSet;
 import io.netty.util.concurrent.ThreadPerTaskExecutor;
@@ -25,6 +26,7 @@ import net.minecraft.block.enums.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.resource.*;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.Identifier;
@@ -283,12 +285,16 @@ public final class BlockOptionalMeta {
             ResourcePackContainerManager rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
             rpl.addCreator(new DefaultResourcePackCreator());
             rpl.callCreators();
-            ResourcePack thePack = ((ResourcePackContainer) rpl.getAlphabeticallyOrderedContainers().iterator().next()).createResourcePack();
+
+            while (rpl.getAlphabeticallyOrderedContainers() != null && rpl.getAlphabeticallyOrderedContainers().iterator().hasNext()) {
+                ResourcePack thePack = rpl.getAlphabeticallyOrderedContainers().iterator().next().createResourcePack();
+                thePacks.add(thePack);
+            }
             ReloadableResourceManager resourceManager = new ReloadableResourceManagerImpl(ResourceType.SERVER_DATA, null);
             manager = new LootManager();
             resourceManager.registerListener(manager);
             try {
-                resourceManager.beginReload(new ThreadPerTaskExecutor(Thread::new), new ThreadPerTaskExecutor(Thread::new), Collections.singletonList(thePack), CompletableFuture.completedFuture(Unit.INSTANCE)).get();
+                resourceManager.beginReload(new ThreadPerTaskExecutor(Thread::new), new ThreadPerTaskExecutor(Thread::new), thePacks, CompletableFuture.completedFuture(Unit.INSTANCE)).get();
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }
@@ -302,7 +308,8 @@ public final class BlockOptionalMeta {
             if (lootTableLocation == LootTables.EMPTY) {
                 return Collections.emptyList();
             } else {
-                return getManager().getSupplier(lootTableLocation).getDrops(new LootContext.Builder(null).setRandom(new Random()).put(LootContextParameters.POSITION, BlockPos.ORIGIN).put(LootContextParameters.TOOL, ItemStack.EMPTY).putNullable(LootContextParameters.BLOCK_ENTITY, null).put(LootContextParameters.BLOCK_STATE, block.getDefaultState()).build(LootContextTypes.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList());
+                IntegratedServer server = Helper.mc.getServer();
+                return getManager().getSupplier(lootTableLocation).getDrops(new LootContext.Builder(server.getWorld(BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().player().dimension)).setRandom(new Random()).put(LootContextParameters.POSITION, BlockPos.ORIGIN).put(LootContextParameters.TOOL, ItemStack.EMPTY).putNullable(LootContextParameters.BLOCK_ENTITY, null).put(LootContextParameters.BLOCK_STATE, block.getDefaultState()).build(LootContextTypes.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList());
             }
         });
     }
