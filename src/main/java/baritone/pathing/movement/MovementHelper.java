@@ -125,7 +125,7 @@ public interface MovementHelper extends ActionCosts, Helper {
             return false; // Don't walk through flowing liquids
         }
         FluidState fluidState = state.getFluidState();
-        if (fluidState.getFluid() instanceof WaterFluid) {
+        if (fluidState.getFluid() instanceof BaseFluid) {
             if (Baritone.settings().assumeWalkOnWater.value) {
                 return false;
             }
@@ -133,7 +133,7 @@ public interface MovementHelper extends ActionCosts, Helper {
             if (!up.getFluidState().isEmpty() || up.getBlock() instanceof LilyPadBlock) {
                 return false;
             }
-            return true;
+            return block == Blocks.WATER || fluidState instanceof WaterFluid;
         }
 
         return state.canPlaceAtSide(bsi.world, bsi.isPassableBlockPos.set(x, y, z), BlockPlacementEnvironment.LAND);
