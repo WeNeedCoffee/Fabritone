@@ -189,14 +189,14 @@ public final class Settings {
      * <p>
      * If a schematic asks for air at a certain position, and that position currently contains a block on this list, it will be treated as correct.
      */
-    public final Setting<List<Block>> buildIgnoreBlocks = new Setting<>(new ArrayList<>(Arrays.asList(
-
-    )));
+    public final Setting<List<Block>> buildIgnoreBlocks = new Setting<>(new ArrayList<>(
+            // Leave Empty by Default
+    ));
 
     /**
      * If this is true, the builder will treat all non-air blocks as correct. It will only place new blocks.
      */
-    public final Setting<Boolean> buildIgnoreExisting = new Setting<>(true);
+    public final Setting<Boolean> buildIgnoreExisting = new Setting<>(false);
 
     /**
      * If this setting is true, Baritone will never break a block that is adjacent to an unsupported falling block.
