@@ -282,9 +282,10 @@ public final class BlockOptionalMeta {
 
     public static LootManager getManager() {
         if (manager == null) {
-            ResourcePackContainerManager rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
+            ResourcePackContainerManager<?> rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
             rpl.addCreator(new DefaultResourcePackCreator());
             rpl.callCreators();
+            List<ResourcePack> thePacks = new ArrayList<>();
 
             while (rpl.getAlphabeticallyOrderedContainers() != null && rpl.getAlphabeticallyOrderedContainers().iterator().hasNext()) {
                 ResourcePack thePack = rpl.getAlphabeticallyOrderedContainers().iterator().next().createResourcePack();
