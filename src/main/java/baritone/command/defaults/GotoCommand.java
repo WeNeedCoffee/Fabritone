@@ -49,9 +49,13 @@ public class GotoCommand extends Command {
             customGoalProcess.path();
             logToast("Going to current goal");
         }
-        if (args.peekDatatypeOrNull(RelativeCoordinate.INSTANCE) != null) { // if we have a numeric first argument...
+        // If we have a numeric first argument, then parse arguments as coordinates.
+        // Note: There is no reason to want to go where you're already at so there
+        // is no need to handle the case of empty arguments.
+        if (args.peekDatatypeOrNull(RelativeCoordinate.INSTANCE) != null) {
+            args.requireMax(3);
             BetterBlockPos origin = baritone.getPlayerContext().playerFeet();
-            Goal goal = args.getDatatypePostOrNull(RelativeGoal.INSTANCE, origin);
+            Goal goal = args.getDatatypePost(RelativeGoal.INSTANCE, origin);
             logToast(String.format("Going to: %s", goal.toString()));
             baritone.getCustomGoalProcess().setGoalAndPath(goal);
             return;
