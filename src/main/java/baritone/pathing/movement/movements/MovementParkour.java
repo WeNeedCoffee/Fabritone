@@ -70,7 +70,7 @@ public class MovementParkour extends Movement {
 
         int xDiff = dir.getOffsetX();
         int zDiff = dir.getOffsetZ();
-        if (!MovementHelper.fullyPassable(context, x + xDiff, y, z + zDiff)) {
+        if (!MovementHelper.fullyPassable(context.bsi, x + xDiff, y, z + zDiff)) {
             // most common case at the top -- the adjacent block isn't air
             return;
         }
@@ -82,13 +82,13 @@ public class MovementParkour extends Movement {
         if (MovementHelper.avoidWalkingInto(adj) && !(adj.getFluidState().getFluid() instanceof WaterFluid)) { // magma sucks
             return;
         }
-        if (!MovementHelper.fullyPassable(context, x + xDiff, y + 1, z + zDiff)) {
+        if (!MovementHelper.fullyPassable(context.bsi, x + xDiff, y + 1, z + zDiff)) {
             return;
         }
-        if (!MovementHelper.fullyPassable(context, x + xDiff, y + 2, z + zDiff)) {
+        if (!MovementHelper.fullyPassable(context.bsi, x + xDiff, y + 2, z + zDiff)) {
             return;
         }
-        if (!MovementHelper.fullyPassable(context, x, y + 2, z)) {
+        if (!MovementHelper.fullyPassable(context.bsi, x, y + 2, z)) {
             return;
         }
         BlockState standingOn = context.get(x, y - 1, z);
@@ -108,14 +108,14 @@ public class MovementParkour extends Movement {
         for (int i = 2; i <= maxJump; i++) {
             int destX = x + xDiff * i;
             int destZ = z + zDiff * i;
-            if (!MovementHelper.fullyPassable(context, destX, y + 1, destZ)) {
+            if (!MovementHelper.fullyPassable(context.bsi, destX, y + 1, destZ)) {
                 return;
             }
-            if (!MovementHelper.fullyPassable(context, destX, y + 2, destZ)) {
+            if (!MovementHelper.fullyPassable(context.bsi, destX, y + 2, destZ)) {
                 return;
             }
             BlockState destInto = context.bsi.get0(destX, y, destZ);
-            if (!MovementHelper.fullyPassable(destInto)) {
+            if (!MovementHelper.fullyPassable(context.bsi.world, context.bsi.isPassableBlockPos.set(destX, y, destZ), destInto)) {
                 if (i <= 3 && context.allowParkourAscend && context.canSprint && MovementHelper.canWalkOn(context.bsi, destX, y, destZ, destInto) && checkOvershootSafety(context.bsi, destX + xDiff, y + 1, destZ + zDiff)) {
                     res.x = destX;
                     res.y = y + 1;
@@ -135,7 +135,7 @@ public class MovementParkour extends Movement {
                 }
                 return;
             }
-            if (!MovementHelper.fullyPassable(context, destX, y + 3, destZ)) {
+            if (!MovementHelper.fullyPassable(context.bsi, destX, y + 3, destZ)) {
                 return;
             }
         }

@@ -28,6 +28,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.ChunkSection;
@@ -42,6 +43,8 @@ public class BlockStateInterface {
 
     private final ClientChunkManager provider;
     private final WorldData worldData;
+    public final BlockView world;
+    public final BlockPos.Mutable isPassableBlockPos;
 
     private WorldChunk prev = null;
     private CachedRegion prevCached = null;
@@ -59,6 +62,7 @@ public class BlockStateInterface {
     }
 
     public BlockStateInterface(World world, WorldData worldData, boolean copyLoadedChunks) {
+        this.world = world;
         this.worldData = worldData;
         if (copyLoadedChunks) {
             this.provider = ((IClientChunkProvider) world.getChunkManager()).createThreadSafeCopy();
@@ -69,6 +73,7 @@ public class BlockStateInterface {
         if (!MinecraftClient.getInstance().isOnThread()) {
             throw new IllegalStateException();
         }
+        this.isPassableBlockPos = new BlockPos.Mutable();
     }
 
     public boolean worldContainsLoadedChunk(int blockX, int blockZ) {

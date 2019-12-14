@@ -36,6 +36,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.BlockView;
 
 import java.util.Optional;
 
@@ -134,27 +135,29 @@ public interface MovementHelper extends ActionCosts, Helper {
             }
             return true;
         }
-        // every block that overrides isPassable with anything more complicated than a "return true;" or "return false;"
-        // has already been accounted for above
-        // therefore it's safe to not construct a blockpos from our x, y, z ints and instead just pass null
-        return state.canPlaceAtSide(null, BlockPos.ORIGIN, BlockPlacementEnvironment.LAND); // workaround for future compatibility =P
+
+        return state.canPlaceAtSide(bsi.world, bsi.isPassableBlockPos.set(x, y, z), BlockPlacementEnvironment.LAND);
     }
 
     /**
      * canWalkThrough but also won't impede movement at all. so not including doors or fence gates (we'd have to right click),
      * not including water, and not including ladders or vines or cobwebs (they slow us down)
      *
-     * @param context Calculation context to provide block state lookup
+     * @param bsi Block State Interface to provide block state lookup
      * @param x       The block's x position
      * @param y       The block's y position
      * @param z       The block's z position
      * @return Whether or not the block at the specified position
      */
-    static boolean fullyPassable(CalculationContext context, int x, int y, int z) {
-        return fullyPassable(context.get(x, y, z));
+    static boolean fullyPassable(BlockStateInterface bsi, int x, int y, int z) {
+        return fullyPassable(bsi.world, bsi.isPassableBlockPos.set(x, y, z), bsi.get0(x, y, z));
     }
 
-    static boolean fullyPassable(BlockState state) {
+    static boolean fullyPassable(IPlayerContext ctx, BlockPos pos) {
+        return fullyPassable(ctx.world(), pos, ctx.world().getBlockState(pos));
+    }
+
+    static boolean fullyPassable(BlockView world, BlockPos pos, BlockState state) {
         Block block = state.getBlock();
         if (block instanceof AirBlock) { // early return for most common case
             return true;
@@ -177,7 +180,7 @@ public interface MovementHelper extends ActionCosts, Helper {
             return false;
         }
         // door, fence gate, liquid, trapdoor have been accounted for, nothing else uses the world or pos parameters
-        return state.canPlaceAtSide(null, null, BlockPlacementEnvironment.LAND);
+        return state.canPlaceAtSide(world, pos, BlockPlacementEnvironment.LAND);
     }
 
     static boolean isReplaceable(int x, int y, int z, BlockState state, BlockStateInterface bsi) {
