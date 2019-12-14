@@ -246,6 +246,11 @@ public final class Settings {
     public final Setting<Integer> rightClickSpeed = new Setting<>(4);
 
     /**
+     * Block reach distance
+     */
+    public final Setting<Float> blockReachDistance = new Setting<>(4.5f);
+
+    /**
      * How many degrees to randomize the yaw every tick. Set to 0 to disable
      */
     public final Setting<Double> randomLooking113 = new Setting<>(2d);
