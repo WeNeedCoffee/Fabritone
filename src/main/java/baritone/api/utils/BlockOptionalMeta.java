@@ -287,8 +287,8 @@ public final class BlockOptionalMeta {
             rpl.callCreators();
             List<ResourcePack> thePacks = new ArrayList<>();
 
-            while (rpl.getAlphabeticallyOrderedContainers() != null && rpl.getAlphabeticallyOrderedContainers().iterator().hasNext()) {
-                ResourcePack thePack = rpl.getAlphabeticallyOrderedContainers().iterator().next().createResourcePack();
+            while (rpl.getEnabledContainers() != null && rpl.getEnabledContainers().iterator().hasNext()) {
+                ResourcePack thePack = rpl.getEnabledContainers().iterator().next().createResourcePack();
                 thePacks.add(thePack);
             }
             ReloadableResourceManager resourceManager = new ReloadableResourceManagerImpl(ResourceType.SERVER_DATA, null);
