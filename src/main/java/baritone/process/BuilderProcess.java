@@ -46,6 +46,7 @@ import net.minecraft.block.AirBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FluidBlock;
+import net.minecraft.fluid.BaseFluid;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
@@ -784,13 +785,16 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         if (desired == null) {
             return true;
         }
-        if (current.getBlock() instanceof AirBlock && desired.getBlock() instanceof AirBlock) {
-            return true;
-        }
-        if ((current.getBlock() == Blocks.WATER || current.getBlock() == Blocks.LAVA) && Baritone.settings().okIfWater.value) {
-            return true;
-        }
         // TODO more complicated comparison logic I guess
+        if (desired.getFluidState() instanceof BaseFluid && Baritone.settings().okIfWater.value) {
+            return true;
+        }
+        if (desired.getBlock() instanceof AirBlock && Baritone.settings().buildIgnoreBlocks.value.contains(current.getBlock())) {
+            return true;
+        }
+        if (!(current.getBlock() instanceof AirBlock) && Baritone.settings().buildIgnoreExisting.value) {
+            return true;
+        }
         return current.equals(desired);
     }
 

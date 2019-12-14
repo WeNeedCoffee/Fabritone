@@ -21,8 +21,11 @@ import baritone.api.utils.SettingsUtil;
 import baritone.api.utils.TypeUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.WallSignBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3i;
 
@@ -180,6 +183,20 @@ public final class Settings {
             Blocks.CHEST,
             Blocks.TRAPPED_CHEST
     )));
+
+    /**
+     * A list of blocks to be treated as if they're air.
+     * <p>
+     * If a schematic asks for air at a certain position, and that position currently contains a block on this list, it will be treated as correct.
+     */
+    public final Setting<List<Block>> buildIgnoreBlocks = new Setting<>(new ArrayList<>(Arrays.asList(
+
+    )));
+
+    /**
+     * If this is true, the builder will treat all non-air blocks as correct. It will only place new blocks.
+     */
+    public final Setting<Boolean> buildIgnoreExisting = new Setting<>(true);
 
     /**
      * If this setting is true, Baritone will never break a block that is adjacent to an unsupported falling block.
