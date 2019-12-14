@@ -211,10 +211,10 @@ public final class RotationUtils {
         HitResult result = RayTraceUtils.rayTraceTowards(entity, rotation, blockReachDistance);
         //System.out.println(result);
         if (result != null && result.getType() == HitResult.Type.BLOCK) {
-            if (((BlockHitResult) result).getPos().equals(pos)) {
+            if (((BlockHitResult) result).getBlockPos().equals(pos)) {
                 return Optional.of(rotation);
             }
-            if (entity.world.getBlockState(pos).getBlock() instanceof FireBlock && ((BlockHitResult) result).getPos().equals(pos.down())) {
+            if (entity.world.getBlockState(pos).getBlock() instanceof FireBlock && ((BlockHitResult) result).getBlockPos().equals(pos.down())) {
                 return Optional.of(rotation);
             }
         }
