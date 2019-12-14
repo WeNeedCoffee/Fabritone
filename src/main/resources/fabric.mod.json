@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "fabritone",
-  "version": "1.4.3",
+  "version": "1.4.5",
   "name": "fabritone",
   "description": "Baritone + Fabric",
   "environment": "client",
