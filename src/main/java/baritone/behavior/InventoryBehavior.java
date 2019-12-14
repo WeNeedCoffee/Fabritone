@@ -137,7 +137,7 @@ public final class InventoryBehavior extends Behavior {
 
     public boolean selectThrowawayForLocation(boolean select, int x, int y, int z) {
         BlockState maybe = baritone.getBuilderProcess().placeAt(x, y, z, baritone.bsi.get0(x, y, z));
-        if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && maybe.equals(((BlockItem) stack.getItem()).getBlock().getPlacementState(new ItemPlacementContext(new ItemUsageContext(ctx.world(), ctx.player(), Hand.MAIN_HAND, stack, new BlockHitResult(new Vec3d(ctx.player().x, ctx.player().y, ctx.player().z), Direction.UP, ctx.playerFeet(), false)) {}))))) {
+        if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && maybe.equals(((BlockItem) stack.getItem()).getBlock().getPlacementState(new ItemPlacementContext(new ItemUsageContext(ctx.world(), ctx.player(), Hand.MAIN_HAND, stack, new BlockHitResult(new Vec3d(ctx.player().getX(), ctx.player().getY(), ctx.player().getZ()), Direction.UP, ctx.playerFeet(), false)) {}))))) {
             return true; // gotem
         }
         if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock().equals(maybe.getBlock()))) {

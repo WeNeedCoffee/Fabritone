@@ -22,7 +22,7 @@ import baritone.api.event.events.TabCompleteEvent;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.gui.screen.CommandSuggestor;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,27 +40,28 @@ import java.util.stream.Stream;
  * @author Brady
  * @since 10/9/2019
  */
-@Mixin(ChatScreen.class)
-public class MixinChatScreen {
+@Mixin(CommandSuggestor.class)
+public class MixinChatSuggestion {
 
+    @Final
     @Shadow
-    protected TextFieldWidget chatField;
+    private TextFieldWidget textField;
 
     @Shadow
     @Final
-    protected List<String> commandExceptions;
+    private List<String> messages;
 
     @Shadow
-    private CompletableFuture<Suggestions> suggestionsFuture;
+    private CompletableFuture<Suggestions> pendingSuggestions;
 
     @Inject(
-            method = "updateCommand",
+            method = "refresh",
             at = @At("HEAD"),
             cancellable = true
     )
     private void preUpdateSuggestion(CallbackInfo ci) {
         // Anything that is present in the input text before the cursor position
-        String prefix = this.chatField.getText().substring(0, Math.min(this.chatField.getText().length(), this.chatField.getCursor()));
+        String prefix = this.textField.getText().substring(0, Math.min(this.textField.getText().length(), this.textField.getCursor()));
 
         TabCompleteEvent event = new TabCompleteEvent(prefix);
         BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().onPreTabComplete(event);
@@ -74,14 +75,14 @@ public class MixinChatScreen {
             ci.cancel();
 
             // TODO: Support populating the command usage
-            this.commandExceptions.clear();
+            this.messages.clear();
 
             if (event.completions.length == 0) {
-                this.suggestionsFuture = Suggestions.empty();
+                this.pendingSuggestions = Suggestions.empty();
             } else {
-                int offset = this.chatField.getText().endsWith(" ")
-                        ? this.chatField.getCursor()
-                        : this.chatField.getText().lastIndexOf(" ") + 1; // If there is no space this is still 0 haha yes
+                int offset = this.textField.getText().endsWith(" ")
+                        ? this.textField.getCursor()
+                        : this.textField.getText().lastIndexOf(" ") + 1; // If there is no space this is still 0 haha yes
 
                 List<Suggestion> suggestionList = Stream.of(event.completions)
                         .map(s -> new Suggestion(StringRange.between(offset, offset + s.length()), s))
@@ -91,8 +92,8 @@ public class MixinChatScreen {
                         StringRange.between(offset, offset + suggestionList.stream().mapToInt(s -> s.getText().length()).max().orElse(0)),
                         suggestionList);
 
-                this.suggestionsFuture = new CompletableFuture<>();
-                this.suggestionsFuture.complete(suggestions);
+                this.pendingSuggestions = new CompletableFuture<>();
+                this.pendingSuggestions.complete(suggestions);
             }
         }
     }

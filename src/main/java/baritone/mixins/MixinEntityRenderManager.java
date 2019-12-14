@@ -18,18 +18,21 @@
 package baritone.mixins;
 
 import baritone.utils.accessor.IEntityRenderManager;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderDispatcher.class)
 public class MixinEntityRenderManager implements IEntityRenderManager {
-    @Shadow
-    private double renderPosX;
-    @Shadow
-    private double renderPosY;
-    @Shadow
-    private double renderPosZ;
+    private double renderPosX = 0;
+    private double renderPosY = 0;
+    private double renderPosZ = 0;
 
     @Override
     public double renderPosX() {
@@ -44,5 +47,14 @@ public class MixinEntityRenderManager implements IEntityRenderManager {
     @Override
     public double renderPosZ() {
         return renderPosZ;
+    }
+
+    @Inject(method = "configure", at = @At("HEAD"))
+    private void configure(World world_1, Camera camera_1, Entity entity_1, CallbackInfo ci) {
+        if (entity_1 instanceof AbstractClientPlayerEntity) {
+            renderPosX = camera_1.getPos().x;
+            renderPosY = camera_1.getPos().y;
+            renderPosZ = camera_1.getPos().z;
+        }
     }
 }

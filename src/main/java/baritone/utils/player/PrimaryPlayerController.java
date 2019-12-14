@@ -56,7 +56,7 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     @Override
     public boolean onPlayerDamageBlock(BlockPos pos, Direction side) {
-        return mc.interactionManager.method_2902(pos, side);
+        return mc.interactionManager.updateBlockBreakingProgress(pos, side);
     }
 
     @Override
@@ -66,7 +66,7 @@ public enum PrimaryPlayerController implements IPlayerController, Helper {
 
     @Override
     public ItemStack windowClick(int windowId, int slotId, int mouseButton, SlotActionType type, PlayerEntity player) {
-        return mc.interactionManager.method_2906(windowId, slotId, mouseButton, type, player);
+        return mc.interactionManager.clickSlot(windowId, slotId, mouseButton, type, player);
     }
 
     @Override

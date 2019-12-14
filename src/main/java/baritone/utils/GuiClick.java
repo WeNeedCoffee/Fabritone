@@ -24,6 +24,7 @@ import baritone.api.pathing.goals.GoalTwoBlocks;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.Helper;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.Entity;
@@ -71,9 +72,9 @@ public class GuiClick extends Screen implements Helper {
     public void render(int mouseX, int mouseY, float partialTicks) {
         double mx = mc.mouse.getX();
         double my = mc.mouse.getY();
-        my = mc.window.getHeight() - my;
-        my *= mc.window.getFramebufferHeight() / (double) mc.window.getHeight();
-        mx *= mc.window.getFramebufferWidth() / (double) mc.window.getWidth();
+        my = mc.getWindow().getHeight() - my;
+        my *= mc.getWindow().getFramebufferHeight() / (double) mc.getWindow().getHeight();
+        mx *= mc.getWindow().getFramebufferWidth() / (double) mc.getWindow().getWidth();
         Vec3d near = toWorld(mx, my, 0);
         Vec3d far = toWorld(mx, my, 1); // "Use 0.945 that's what stack overflow says" - leijurv
         if (near != null && far != null) {
@@ -123,8 +124,8 @@ public class GuiClick extends Screen implements Helper {
     }
 
     public void onRender() {
-        GlStateManager.getMatrix(GL_MODELVIEW_MATRIX, (FloatBuffer) MODELVIEW.clear());
-        GlStateManager.getMatrix(GL_PROJECTION_MATRIX, (FloatBuffer) PROJECTION.clear());
+        RenderSystem.glUniformMatrix4(GL_MODELVIEW_MATRIX, false, (FloatBuffer) MODELVIEW.clear());
+        RenderSystem.glUniformMatrix4(GL_PROJECTION_MATRIX, false, (FloatBuffer) PROJECTION.clear());
         GL11.glGetIntegerv(GL_VIEWPORT, (IntBuffer) VIEWPORT.clear());
 
         if (currentMouseOver != null) {

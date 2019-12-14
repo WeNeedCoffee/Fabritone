@@ -28,6 +28,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -55,7 +56,7 @@ public class MixinMinecraft {
     public ClientWorld world;
 
     @Inject(
-            method = "init",
+            method = "<init>",
             at = @At("RETURN")
     )
     private void postInit(CallbackInfo ci) {
@@ -63,11 +64,8 @@ public class MixinMinecraft {
     }
 
     @Inject(
-            method = "init",
-            at = @At(
-                    value = "INVOKE",
-                    target = "net/minecraft/client/MinecraftClient.startTimerHackThread()V"
-            )
+            method = "startTimerHackThread",
+            at = @At("HEAD")
     )
     private void preInit(CallbackInfo ci) {
         BaritoneAutoTest.INSTANCE.onPreInit();
@@ -147,7 +145,8 @@ public class MixinMinecraft {
         return (BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().getCurrent() != null && player != null) || screen.passEvents;
     }
 
-    @Inject(
+    // TODO: 1.15
+    /*@Inject(
             method = "doItemUse",
             at = @At(
                     value = "INVOKE",
@@ -155,10 +154,10 @@ public class MixinMinecraft {
             ),
             locals = LocalCapture.CAPTURE_FAILHARD
     )
-    private void onBlockUse(CallbackInfo ci, Hand var1[], int var2, int var3, Hand enumhand, ItemStack itemstack, BlockHitResult raytrace, int i, ActionResult enumactionresult) {
+    private void onBlockUse(CallbackInfo ci, Hand var1[], int var2, int var3, Hand enumhand, ItemStack itemstack, EntityHitResult raytrace, Entity i, ActionResult enumactionresult) {
         // rightClickMouse is only for the main player
-        BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().onBlockInteract(new BlockInteractEvent(raytrace.getBlockPos(), BlockInteractEvent.Type.USE));
-    }
+        BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().onBlockInteract(new BlockInteractEvent(raytrace.getEntity().getBlockPos(), BlockInteractEvent.Type.USE));
+    }*/
 
 
 }

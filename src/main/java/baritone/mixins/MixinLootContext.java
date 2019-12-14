@@ -18,10 +18,10 @@
 package baritone.mixins;
 
 import baritone.api.utils.BlockOptionalMeta;
+import net.minecraft.loot.LootManager;
+import net.minecraft.loot.context.LootContext;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.loot.LootManager;
-import net.minecraft.world.loot.context.LootContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -46,7 +46,7 @@ public class MixinLootContext {
             method = "build",
             at = @At(
                     value = "INVOKE",
-                    target = "net/minecraft/server/MinecraftServer.getLootManager()Lnet/minecraft/world/loot/LootManager;"
+                    target = "net/minecraft/server/MinecraftServer.getLootManager()Lnet/minecraft/loot/LootManager;"
             )
     )
     private LootManager getLootTableManager(MinecraftServer server) {

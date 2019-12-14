@@ -70,7 +70,7 @@ public enum WorldScanner implements IWorldScanner {
                     foundChunks = true;
                     int chunkX = xoff + playerChunkX;
                     int chunkZ = zoff + playerChunkZ;
-                    WorldChunk chunk = chunkProvider.method_2857(chunkX, chunkZ, null, false);
+                    WorldChunk chunk = chunkProvider.getChunk(chunkX, chunkZ, null, false);
                     if (chunk == null) {
                         continue;
                     }
@@ -97,7 +97,7 @@ public enum WorldScanner implements IWorldScanner {
         }
 
         ClientChunkManager chunkProvider = (ClientChunkManager) ctx.world().getChunkManager();
-        WorldChunk chunk = chunkProvider.method_2857(pos.x, pos.z, null, false);
+        WorldChunk chunk = chunkProvider.getChunk(pos.x, pos.z, null, false);
         int playerY = ctx.playerFeet().getY();
 
         if (chunk == null || chunk.isEmpty()) {
@@ -124,15 +124,15 @@ public enum WorldScanner implements IWorldScanner {
         int playerChunkX = playerPos.getX() >> 4;
         int playerChunkZ = playerPos.getZ() >> 4;
 
-        int minX = playerChunkX - range;
-        int minZ = playerChunkZ - range;
-        int maxX = playerChunkX + range;
-        int maxZ = playerChunkZ + range;
+        int x1 = playerChunkX - range;
+        int z1 = playerChunkZ - range;
+        int x2 = playerChunkX + range;
+        int z2 = playerChunkZ + range;
 
         int queued = 0;
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                WorldChunk chunk = chunkProvider.method_2857(x, z, null, false);
+        for (int x = x1; x <= x2; x++) {
+            for (int z = z1; z <= z2; z++) {
+                WorldChunk chunk = chunkProvider.getChunk(x, z, null, false);
 
                 if (chunk != null && !chunk.isEmpty()) {
                     queued++;

@@ -34,7 +34,7 @@ import static org.lwjgl.opengl.GL11.*;
 public interface IRenderer {
 
     Tessellator tessellator = Tessellator.getInstance();
-    BufferBuilder buffer = tessellator.getBufferBuilder();
+    BufferBuilder buffer = tessellator.getBuffer();
     IEntityRenderManager renderManager = (IEntityRenderManager) Helper.mc.getEntityRenderManager();
     Settings settings = BaritoneAPI.getSettings();
 
@@ -77,32 +77,32 @@ public interface IRenderer {
 
         buffer.begin(GL_LINES, VertexFormats.POSITION);
         // bottom
-        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
+        buffer.vertex(toDraw.x1, toDraw.y1, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y1, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y1, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y1, toDraw.z2).next();
+        buffer.vertex(toDraw.x2, toDraw.y1, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y1, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y1, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y1, toDraw.z1).next();
         // top
-        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
+        buffer.vertex(toDraw.x1, toDraw.y2, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y2, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y2, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y2, toDraw.z2).next();
+        buffer.vertex(toDraw.x2, toDraw.y2, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y2, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y2, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y2, toDraw.z1).next();
         // corners
-        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.minZ).next();
-        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.minZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.minY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.maxX, toDraw.maxY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.minY, toDraw.maxZ).next();
-        buffer.vertex(toDraw.minX, toDraw.maxY, toDraw.maxZ).next();
+        buffer.vertex(toDraw.x1, toDraw.y1, toDraw.z1).next();
+        buffer.vertex(toDraw.x1, toDraw.y2, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y1, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y2, toDraw.z1).next();
+        buffer.vertex(toDraw.x2, toDraw.y1, toDraw.z2).next();
+        buffer.vertex(toDraw.x2, toDraw.y2, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y1, toDraw.z2).next();
+        buffer.vertex(toDraw.x1, toDraw.y2, toDraw.z2).next();
         tessellator.draw();
     }
 

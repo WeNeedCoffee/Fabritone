@@ -26,6 +26,12 @@ import net.minecraft.block.*;
 import net.minecraft.block.enums.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootManager;
+import net.minecraft.loot.LootTables;
+import net.minecraft.loot.condition.LootConditionManager;
+import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.resource.*;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.state.property.Property;
@@ -34,9 +40,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.loot.LootManager;
-import net.minecraft.world.loot.LootTables;
-import net.minecraft.world.loot.context.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -200,7 +203,7 @@ public final class BlockOptionalMeta {
         BlockState newState = state;
 
         for (Property<?> property : state.getProperties()) {
-            Class<?> valueClass = property.getValueType();
+            Class<?> valueClass = property.getType();
             if (normalizations.containsKey(property)) {
                 try {
                     newState = newState.with(
@@ -242,7 +245,7 @@ public final class BlockOptionalMeta {
     }
 
     private static Set<BlockState> getStates(Block block) {
-        return new HashSet<>(block.getStateFactory().getStates());
+        return new HashSet<>(block.getStateManager().getStates());
     }
 
     private static ImmutableSet<Integer> getStateHashes(Set<BlockState> blockstates) {
@@ -308,17 +311,17 @@ public final class BlockOptionalMeta {
 
     public static LootManager getManager() {
         if (manager == null) {
-            ResourcePackContainerManager<?> rpl = new ResourcePackContainerManager<>(ResourcePackContainer::new);
-            rpl.addCreator(new DefaultResourcePackCreator());
-            rpl.callCreators();
+            ResourcePackManager<?> rpl = new ResourcePackManager<>(ResourcePackProfile::new);
+            rpl.registerProvider(new VanillaDataPackProvider());
+            rpl.scanPacks();
             List<ResourcePack> thePacks = new ArrayList<>();
 
-            while (rpl.getEnabledContainers() != null && rpl.getEnabledContainers().iterator().hasNext()) {
-                ResourcePack thePack = rpl.getEnabledContainers().iterator().next().createResourcePack();
+            while (rpl.getEnabledProfiles() != null && rpl.getEnabledProfiles().iterator().hasNext()) {
+                ResourcePack thePack = rpl.getEnabledProfiles().iterator().next().createResourcePack();
                 thePacks.add(thePack);
             }
             ReloadableResourceManager resourceManager = new ReloadableResourceManagerImpl(ResourceType.SERVER_DATA, null);
-            manager = new LootManager();
+            manager = new LootManager(new LootConditionManager());
             resourceManager.registerListener(manager);
             try {
                 resourceManager.beginReload(new ThreadPerTaskExecutor(Thread::new), new ThreadPerTaskExecutor(Thread::new), thePacks, CompletableFuture.completedFuture(Unit.INSTANCE)).get();

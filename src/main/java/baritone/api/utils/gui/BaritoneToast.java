@@ -47,7 +47,7 @@ public class BaritoneToast implements Toast
         }
 
         toastGui.getGame().getTextureManager().bindTexture(new Identifier("textures/gui/toasts.png"));
-        GlStateManager.color3f(1.0F, 1.0F, 1.0F);
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 255.0f);
         toastGui.blit(0, 0, 0, 32, 160, 32);
 
         if (this.subtitle == null)

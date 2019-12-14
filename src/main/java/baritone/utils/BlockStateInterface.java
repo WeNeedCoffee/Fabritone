@@ -112,7 +112,7 @@ public class BlockStateInterface {
             if (cached != null && cached.getPos().x == x >> 4 && cached.getPos().z == z >> 4) {
                 return getFromChunk(cached, x, y, z);
             }
-            WorldChunk chunk = provider.method_2857(x >> 4, z >> 4, ChunkStatus.FULL, false);
+            WorldChunk chunk = provider.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, false);
             if (chunk != null && !chunk.isEmpty()) {
                 prev = chunk;
                 return getFromChunk(chunk, x, y, z);
@@ -144,7 +144,7 @@ public class BlockStateInterface {
         if (prevChunk != null && prevChunk.getPos().x == x >> 4 && prevChunk.getPos().z == z >> 4) {
             return true;
         }
-        prevChunk = provider.method_2857(x >> 4, z >> 4, ChunkStatus.FULL, false);
+        prevChunk = provider.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, false);
         if (prevChunk != null && !prevChunk.isEmpty()) {
             prev = prevChunk;
             return true;

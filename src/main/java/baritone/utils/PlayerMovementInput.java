@@ -27,7 +27,7 @@ public class PlayerMovementInput extends net.minecraft.client.input.Input {
     }
 
     @Override
-    public void tick(boolean p_217607_1_, boolean p_217607_2_) {
+    public void tick(boolean p_217607_1_) {
         this.movementSideways = 0.0F;
         this.movementForward = 0.0F;
 

@@ -212,7 +212,7 @@ public class MovementDescend extends Movement {
 
         BlockPos playerFeet = ctx.playerFeet();
         BlockPos fakeDest = new BlockPos(dest.getX() * 2 - src.getX(), dest.getY(), dest.getZ() * 2 - src.getZ());
-        if ((playerFeet.equals(dest) || playerFeet.equals(fakeDest)) && (MovementHelper.isLiquid(ctx, dest) || ctx.player().y - dest.getY() < 0.5)) { // lilypads
+        if ((playerFeet.equals(dest) || playerFeet.equals(fakeDest)) && (MovementHelper.isLiquid(ctx, dest) || ctx.player().getY() - dest.getY() < 0.5)) { // lilypads
             // Wait until we're actually on the ground before saying we're done because sometimes we continue to fall if the next action starts immediately
             return state.setStatus(MovementStatus.SUCCESS);
             /* else {
@@ -231,11 +231,11 @@ public class MovementDescend extends Movement {
             )).setInput(Input.MOVE_FORWARD, true);
             return state;
         }
-        double diffX = ctx.player().x - (dest.getX() + 0.5);
-        double diffZ = ctx.player().z - (dest.getZ() + 0.5);
+        double diffX = ctx.player().getX() - (dest.getX() + 0.5);
+        double diffZ = ctx.player().getZ() - (dest.getZ() + 0.5);
         double ab = Math.sqrt(diffX * diffX + diffZ * diffZ);
-        double x = ctx.player().x - (src.getX() + 0.5);
-        double z = ctx.player().z - (src.getZ() + 0.5);
+        double x = ctx.player().getX() - (src.getX() + 0.5);
+        double z = ctx.player().getZ() - (src.getZ() + 0.5);
         double fromStart = Math.sqrt(x * x + z * z);
         if (!playerFeet.equals(dest) || ab > 0.25) {
             if (numTicks++ < 20 && fromStart < 1.25) {

@@ -30,6 +30,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
@@ -250,20 +251,19 @@ public final class PathRenderer implements IRenderer, Helper {
                     GlStateManager.disableDepthTest();
                 }
 
-                BeaconBlockEntityRenderer.renderLightBeam(
-                        goalPos.getX() - renderPosX,
-                        -renderPosY,
-                        goalPos.getZ() - renderPosZ,
+                BeaconBlockEntityRenderer.renderLightBeam(new MatrixStack(),
+                        Helper.mc.getBufferBuilders().getEntityVertexConsumers(),
+                        BeaconBlockEntityRenderer.BEAM_TEX,
                         partialTicks,
-                        1.0,
+                        1.0f,
                         player.world.getTime(),
                         0,
                         256,
                         color.getColorComponents(null),
 
                         // Arguments filled by the private method lol
-                        0.2D,
-                        0.25D
+                        0.2f,
+                        0.25f
                 );
 
                 if (settings.renderGoalIgnoreDepth.value) {
@@ -293,10 +293,10 @@ public final class PathRenderer implements IRenderer, Helper {
             return;
         } else if (goal instanceof GoalYLevel) {
             GoalYLevel goalpos = (GoalYLevel) goal;
-            minX = player.x - settings.yLevelBoxSize.value - renderPosX;
-            minZ = player.z - settings.yLevelBoxSize.value - renderPosZ;
-            maxX = player.x + settings.yLevelBoxSize.value - renderPosX;
-            maxZ = player.z + settings.yLevelBoxSize.value - renderPosZ;
+            minX = player.getX() - settings.yLevelBoxSize.value - renderPosX;
+            minZ = player.getZ() - settings.yLevelBoxSize.value - renderPosZ;
+            maxX = player.getX() + settings.yLevelBoxSize.value - renderPosX;
+            maxZ = player.getZ() + settings.yLevelBoxSize.value - renderPosZ;
             minY = ((GoalYLevel) goal).level - renderPosY;
             maxY = minY + 2;
             y1 = 1 + y + goalpos.level - renderPosY;

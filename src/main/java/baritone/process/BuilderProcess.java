@@ -289,9 +289,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             }
             Box aabb = placeAgainstState.getOutlineShape(ctx.world(), placeAgainstPos).getBoundingBox();
             for (Vec3d placementMultiplier : aabbSideMultipliers(against)) {
-                double placeX = placeAgainstPos.x + aabb.minX * placementMultiplier.x + aabb.maxX * (1 - placementMultiplier.x);
-                double placeY = placeAgainstPos.y + aabb.minY * placementMultiplier.y + aabb.maxY * (1 - placementMultiplier.y);
-                double placeZ = placeAgainstPos.z + aabb.minZ * placementMultiplier.z + aabb.maxZ * (1 - placementMultiplier.z);
+                double placeX = placeAgainstPos.x + aabb.x1 * placementMultiplier.x + aabb.x2 * (1 - placementMultiplier.x);
+                double placeY = placeAgainstPos.y + aabb.y1 * placementMultiplier.y + aabb.y2 * (1 - placementMultiplier.y);
+                double placeZ = placeAgainstPos.z + aabb.z1 * placementMultiplier.z + aabb.z2 * (1 - placementMultiplier.z);
                 Rotation rot = RotationUtils.calcRotationFromVec3d(ctx.playerHead(), new Vec3d(placeX, placeY, placeZ), ctx.playerRotations());
                 HitResult result = RayTraceUtils.rayTraceTowards(ctx.player(), rot, ctx.playerController().getBlockReachDistance());
                 if (result != null && result.getType() == HitResult.Type.BLOCK && ((BlockHitResult) result).getPos().equals(placeAgainstPos) && ((BlockHitResult) result).getSide() == against.getOpposite()) {
@@ -374,16 +374,16 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 realSchematic = schematic;
             }
             ISchematic realSchematic = this.realSchematic; // wrap this properly, dont just have the inner class refer to the builderprocess.this
-            int minYInclusive;
-            int maxYInclusive;
+            int y1Inclusive;
+            int y2Inclusive;
             // layer = 0 should be nothing
             // layer = realSchematic.heightY() should be everything
             if (Baritone.settings().layerOrder.value) { // top to bottom
-                maxYInclusive = realSchematic.heightY() - 1;
-                minYInclusive = realSchematic.heightY() - layer;
+                y2Inclusive = realSchematic.heightY() - 1;
+                y1Inclusive = realSchematic.heightY() - layer;
             } else {
-                maxYInclusive = layer - 1;
-                minYInclusive = 0;
+                y2Inclusive = layer - 1;
+                y1Inclusive = 0;
             }
             schematic = new ISchematic() {
                 @Override
@@ -393,7 +393,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
                 @Override
                 public boolean inSchematic(int x, int y, int z, BlockState currentState) {
-                    return ISchematic.super.inSchematic(x, y, z, currentState) && y >= minYInclusive && y <= maxYInclusive && realSchematic.inSchematic(x, y, z, currentState);
+                    return ISchematic.super.inSchematic(x, y, z, currentState) && y >= y1Inclusive && y <= y2Inclusive && realSchematic.inSchematic(x, y, z, currentState);
                 }
 
                 @Override
@@ -781,7 +781,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 continue;
             }
             // <toxic cloud>
-            result.add(((BlockItem) stack.getItem()).getBlock().getPlacementState(new ItemPlacementContext(new ItemUsageContext(ctx.world(), ctx.player(), Hand.MAIN_HAND, stack, new BlockHitResult(new Vec3d(ctx.player().x, ctx.player().y, ctx.player().z), Direction.UP, ctx.playerFeet(), false)) {})));
+            result.add(((BlockItem) stack.getItem()).getBlock().getPlacementState(new ItemPlacementContext(new ItemUsageContext(ctx.world(), ctx.player(), Hand.MAIN_HAND, stack, new BlockHitResult(new Vec3d(ctx.player().getX(), ctx.player().getY(), ctx.player().getZ()), Direction.UP, ctx.playerFeet(), false)) {})));
             // </toxic cloud>
         }
         return result;

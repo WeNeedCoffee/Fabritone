@@ -246,19 +246,19 @@ public class MovementParkour extends Movement {
                 // but i did it anyway
                 return state.setStatus(MovementStatus.SUCCESS);
             }
-            if (ctx.player().y - ctx.playerFeet().getY() < 0.094) { // lilypads
+            if (ctx.player().getY() - ctx.playerFeet().getY() < 0.094) { // lilypads
                 state.setStatus(MovementStatus.SUCCESS);
             }
         } else if (!ctx.playerFeet().equals(src)) {
-            if (ctx.playerFeet().equals(src.offset(direction)) || ctx.player().y - src.y > 0.0001) {
+            if (ctx.playerFeet().equals(src.offset(direction)) || ctx.player().getY() - src.y > 0.0001) {
                 if (!MovementHelper.canWalkOn(ctx, dest.down()) && !ctx.player().onGround && MovementHelper.attemptToPlaceABlock(state, baritone, dest.down(), true) == PlaceResult.READY_TO_PLACE) {
                     // go in the opposite order to check DOWN before all horizontals -- down is preferable because you don't have to look to the side while in midair, which could mess up the trajectory
                     state.setInput(Input.CLICK_RIGHT, true);
                 }
                 // prevent jumping too late by checking for ascend
                 if (dist == 3 && !ascend) { // this is a 2 block gap, dest = src + direction * 3
-                    double xDiff = (src.x + 0.5) - ctx.player().x;
-                    double zDiff = (src.z + 0.5) - ctx.player().z;
+                    double xDiff = (src.x + 0.5) - ctx.player().getX();
+                    double zDiff = (src.z + 0.5) - ctx.player().getZ();
                     double distFromStart = Math.max(Math.abs(xDiff), Math.abs(zDiff));
                     if (distFromStart < 0.7) {
                         return state;

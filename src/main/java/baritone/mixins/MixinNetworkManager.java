@@ -82,7 +82,7 @@ public class MixinNetworkManager {
     }
 
     @Inject(
-            method = "method_10770",
+            method = "channelRead0",
             at = @At(
                     value = "INVOKE",
                     target = "net/minecraft/network/ClientConnection.handlePacket(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;)V"
@@ -100,7 +100,7 @@ public class MixinNetworkManager {
     }
 
     @Inject(
-            method = "method_10770",
+            method = "channelRead0",
             at = @At("RETURN")
     )
     private void postProcessPacket(ChannelHandlerContext context, Packet<?> packet, CallbackInfo ci) {

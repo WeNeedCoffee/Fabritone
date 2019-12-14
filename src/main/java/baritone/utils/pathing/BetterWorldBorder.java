@@ -25,26 +25,26 @@ import net.minecraft.world.border.WorldBorder;
  */
 public class BetterWorldBorder {
 
-    private final double minX;
-    private final double maxX;
-    private final double minZ;
-    private final double maxZ;
+    private final double x1;
+    private final double x2;
+    private final double z1;
+    private final double z2;
 
     public BetterWorldBorder(WorldBorder border) {
-        this.minX = border.getBoundWest();
-        this.maxX = border.getBoundEast();
-        this.minZ = border.getBoundNorth();
-        this.maxZ = border.getBoundSouth();
+        this.x1 = border.getBoundWest();
+        this.x2 = border.getBoundEast();
+        this.z1 = border.getBoundNorth();
+        this.z2 = border.getBoundSouth();
     }
 
     public boolean entirelyContains(int x, int z) {
-        return x + 1 > minX && x < maxX && z + 1 > minZ && z < maxZ;
+        return x + 1 > x1 && x < x2 && z + 1 > z1 && z < z2;
     }
 
     public boolean canPlaceAt(int x, int z) {
         // move it in 1 block on all sides
         // because we can't place a block at the very edge against a block outside the border
         // it won't let us right click it
-        return x > minX && x + 1 < maxX && z > minZ && z + 1 < maxZ;
+        return x > x1 && x + 1 < x2 && z > z1 && z + 1 < z2;
     }
 }

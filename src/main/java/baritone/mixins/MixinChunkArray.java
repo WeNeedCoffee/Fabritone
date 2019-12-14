@@ -20,6 +20,7 @@ package baritone.mixins;
 import baritone.utils.accessor.IChunkArray;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.WorldChunk;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -28,27 +29,35 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 @Mixin(targets = "net.minecraft.client.world.ClientChunkManager$ClientChunkMap")
 public abstract class MixinChunkArray implements IChunkArray {
 
+    @Final
     @Shadow
     private AtomicReferenceArray<WorldChunk> chunks;
+
+    @Final
     @Shadow
-    private int loadDistance;
+    private int radius;
+
+    @Final
     @Shadow
-    private int loadDiameter;
+    private int diameter;
+
     @Shadow
     private int centerChunkX;
+
     @Shadow
     private int centerChunkZ;
-    @Shadow
-    private int field_19143;
 
     @Shadow
-    protected abstract boolean hasChunk(int x, int z);
+    private int loadedChunkCount;
 
     @Shadow
-    protected abstract int index(int x, int z);
+    protected abstract boolean isInRadius(int x, int z);
 
     @Shadow
-    protected abstract void unload(int index, WorldChunk chunk);
+    protected abstract int getIndex(int x, int z);
+
+    @Shadow
+    protected abstract void set(int index, WorldChunk chunk);
 
     @Override
     public int centerX() {
@@ -62,7 +71,7 @@ public abstract class MixinChunkArray implements IChunkArray {
 
     @Override
     public int viewDistance() {
-        return loadDistance;
+        return radius;
     }
 
     @Override
@@ -80,12 +89,12 @@ public abstract class MixinChunkArray implements IChunkArray {
             WorldChunk chunk = copyingFrom.get(k);
             if (chunk != null) {
                 ChunkPos chunkpos = chunk.getPos();
-                if (hasChunk(chunkpos.x, chunkpos.z)) {
-                    int index = index(chunkpos.x, chunkpos.z);
+                if (isInRadius(chunkpos.x, chunkpos.z)) {
+                    int index = getIndex(chunkpos.x, chunkpos.z);
                     if (chunks.get(index) != null) {
                         throw new IllegalStateException("Doing this would mutate the client's REAL loaded chunks?!");
                     }
-                    unload(index, chunk);
+                    set(index, chunk);
                 }
             }
         }
