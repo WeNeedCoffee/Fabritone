@@ -20,6 +20,7 @@ package baritone.mixins;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.event.events.RenderEvent;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,8 +40,12 @@ public class MixinGameRenderer {
             )
     )
     private void renderWorldPass(float partialTicks, long finishTimeNano, MatrixStack stackIn, CallbackInfo ci) {
+        RenderSystem.pushMatrix();
+        RenderSystem.loadIdentity();
+        RenderSystem.multMatrix(stackIn.peek().getModel());
         for (IBaritone ibaritone : BaritoneAPI.getProvider().getAllBaritones()) {
             ibaritone.getGameEventHandler().onRenderPass(new RenderEvent(partialTicks));
         }
+        RenderSystem.popMatrix();
     }
 }

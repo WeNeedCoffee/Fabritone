@@ -20,12 +20,12 @@ package baritone.utils;
 import baritone.api.BaritoneAPI;
 import baritone.api.Settings;
 import baritone.api.utils.Helper;
-import baritone.utils.accessor.IEntityRenderManager;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 
 import java.awt.*;
 
@@ -35,8 +35,11 @@ public interface IRenderer {
 
     Tessellator tessellator = Tessellator.getInstance();
     BufferBuilder buffer = tessellator.getBuffer();
-    IEntityRenderManager renderManager = (IEntityRenderManager) Helper.mc.getEntityRenderManager();
     Settings settings = BaritoneAPI.getSettings();
+
+    static Vec3d camPos() {
+        return Helper.mc.gameRenderer.getCamera().getPos();
+    }
 
     static void glColor(Color color, float alpha) {
         float[] colorComponents = color.getColorComponents(null);
@@ -73,7 +76,7 @@ public interface IRenderer {
     }
 
     static void drawAABB(Box aabb) {
-        Box toDraw = aabb.offset(-renderManager.renderPosX(), -renderManager.renderPosY(), -renderManager.renderPosZ());
+        Box toDraw = aabb.offset(-IRenderer.camPos().getX(), -IRenderer.camPos().getY(), -IRenderer.camPos().getZ());
 
         buffer.begin(GL_LINES, VertexFormats.POSITION);
         // bottom
@@ -108,5 +111,17 @@ public interface IRenderer {
 
     static void drawAABB(Box aabb, double expand) {
         drawAABB(aabb.expand(expand, expand, expand));
+    }
+
+    static Vec3d toVec3d(double x, double y, double z) {
+        return new Vec3d(x, y, z);
+    }
+
+    static void putVertex(BufferBuilder buffer, Vec3d camPos, Vec3d pos) {
+        buffer.vertex(
+                pos.x - camPos.x,
+                pos.y - camPos.y,
+                pos.z - camPos.z
+        ).next();
     }
 }

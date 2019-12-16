@@ -79,7 +79,7 @@ public class GuiClick extends Screen implements Helper {
         Vec3d far = toWorld(mx, my, 1); // "Use 0.945 that's what stack overflow says" - leijurv
         if (near != null && far != null) {
             ///
-            Vec3d viewerPos = new Vec3d(PathRenderer.posX(), PathRenderer.posY(), PathRenderer.posZ());
+            Vec3d viewerPos = new Vec3d(IRenderer.camPos().getX(), IRenderer.camPos().getY(), IRenderer.camPos().getZ());
             ClientPlayerEntity player = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().player();
             HitResult result = player.world.rayTrace(new RayTraceContext(near.add(viewerPos), far.add(viewerPos), RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, player));
             if (result != null && result.getType() == HitResult.Type.BLOCK) {

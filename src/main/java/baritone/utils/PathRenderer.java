@@ -36,6 +36,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 
@@ -57,18 +58,6 @@ public final class PathRenderer implements IRenderer, Helper {
 
     private PathRenderer() {}
 
-    public static double posX() {
-        return renderManager.renderPosX();
-    }
-
-    public static double posY() {
-        return renderManager.renderPosY();
-    }
-
-    public static double posZ() {
-        return renderManager.renderPosZ();
-    }
-
     public static void render(RenderEvent event, PathingBehavior behavior) {
         float partialTicks = event.getPartialTicks();
         Goal goal = behavior.getGoal();
@@ -86,7 +75,7 @@ public final class PathRenderer implements IRenderer, Helper {
 
         Entity renderView = Helper.mc.getCameraEntity();
 
-        if (renderView.world != BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().world()) {
+        if (renderView == null || renderView.world == null || renderView.world != BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().world()) {
             System.out.println("I have no idea what's going on");
             System.out.println("The primary baritone is in a different world than the render view entity");
             System.out.println("Not rendering the path");
@@ -170,7 +159,7 @@ public final class PathRenderer implements IRenderer, Helper {
                 IRenderer.glColor(color, alpha);
             }
 
-            drawLine(start.x, start.y, start.z, end.x, end.y, end.z);
+            drawLine(IRenderer.toVec3d(start.x, start.y, start.z), IRenderer.toVec3d(end.x, end.y, end.z));
 
             tessellator.draw();
         }
@@ -179,20 +168,17 @@ public final class PathRenderer implements IRenderer, Helper {
     }
 
 
-    public static void drawLine(double x1, double y1, double z1, double x2, double y2, double z2) {
-        double vpX = posX();
-        double vpY = posY();
-        double vpZ = posZ();
+    public static void drawLine(Vec3d start, Vec3d end) {
         boolean renderPathAsFrickinThingy = !settings.renderPathAsLine.value;
 
         buffer.begin(renderPathAsFrickinThingy ? GL_LINE_STRIP : GL_LINES, VertexFormats.POSITION);
-        buffer.vertex(x1 + 0.5D - vpX, y1 + 0.5D - vpY, z1 + 0.5D - vpZ).next();
-        buffer.vertex(x2 + 0.5D - vpX, y2 + 0.5D - vpY, z2 + 0.5D - vpZ).next();
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(start.x + 0.5D, start.y + 0.5D, start.z + 0.5D));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(end.x + 0.5D, end.y + 0.5D, end.z + 0.5D));
 
         if (renderPathAsFrickinThingy) {
-            buffer.vertex(x2 + 0.5D - vpX, y2 + 0.53D - vpY, z2 + 0.5D - vpZ).next();
-            buffer.vertex(x1 + 0.5D - vpX, y1 + 0.53D - vpY, z1 + 0.5D - vpZ).next();
-            buffer.vertex(x1 + 0.5D - vpX, y1 + 0.5D - vpY, z1 + 0.5D - vpZ).next();
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(end.x + 0.5D, end.y + 0.53D, end.z + 0.5D));
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(start.x + 0.5D, start.y + 0.53D, start.z + 0.5D));
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(start.x + 0.5D, start.y + 0.5D, start.z + 0.5D));
         }
     }
 
@@ -214,9 +200,6 @@ public final class PathRenderer implements IRenderer, Helper {
     }
 
     public static void drawDankLitGoalBox(Entity player, Goal goal, float partialTicks, Color color) {
-        double renderPosX = posX();
-        double renderPosY = posY();
-        double renderPosZ = posZ();
         double minX, maxX;
         double minZ, maxZ;
         double minY, maxY;
@@ -224,16 +207,16 @@ public final class PathRenderer implements IRenderer, Helper {
         double y = MathHelper.cos((float) (((float) ((System.nanoTime() / 100000L) % 20000L)) / 20000F * Math.PI * 2));
         if (goal instanceof IGoalRenderPos) {
             BlockPos goalPos = ((IGoalRenderPos) goal).getGoalPos();
-            minX = goalPos.getX() + 0.002 - renderPosX;
-            maxX = goalPos.getX() + 1 - 0.002 - renderPosX;
-            minZ = goalPos.getZ() + 0.002 - renderPosZ;
-            maxZ = goalPos.getZ() + 1 - 0.002 - renderPosZ;
+            minX = goalPos.getX() + 0.002;
+            maxX = goalPos.getX() + 1 - 0.002;
+            minZ = goalPos.getZ() + 0.002;
+            maxZ = goalPos.getZ() + 1 - 0.002;
             if (goal instanceof GoalGetToBlock || goal instanceof GoalTwoBlocks) {
                 y /= 2;
             }
-            y1 = 1 + y + goalPos.getY() - renderPosY;
-            y2 = 1 - y + goalPos.getY() - renderPosY;
-            minY = goalPos.getY() - renderPosY;
+            y1 = 1 + y + goalPos.getY();
+            y2 = 1 - y + goalPos.getY();
+            minY = goalPos.getY();
             maxY = minY + 2;
             if (goal instanceof GoalGetToBlock || goal instanceof GoalTwoBlocks) {
                 y1 -= 0.5;
@@ -274,15 +257,15 @@ public final class PathRenderer implements IRenderer, Helper {
                 return;
             }
 
-            minX = goalPos.getX() + 0.002 - renderPosX;
-            maxX = goalPos.getX() + 1 - 0.002 - renderPosX;
-            minZ = goalPos.getZ() + 0.002 - renderPosZ;
-            maxZ = goalPos.getZ() + 1 - 0.002 - renderPosZ;
+            minX = goalPos.getX() + 0.002;
+            maxX = goalPos.getX() + 1 - 0.002;
+            minZ = goalPos.getZ() + 0.002;
+            maxZ = goalPos.getZ() + 1 - 0.002;
 
             y1 = 0;
             y2 = 0;
-            minY = 0 - renderPosY;
-            maxY = 256 - renderPosY;
+            minY = 0;
+            maxY = 256;
         } else if (goal instanceof GoalComposite) {
             for (Goal g : ((GoalComposite) goal).goals()) {
                 drawDankLitGoalBox(player, g, partialTicks, color);
@@ -293,14 +276,14 @@ public final class PathRenderer implements IRenderer, Helper {
             return;
         } else if (goal instanceof GoalYLevel) {
             GoalYLevel goalpos = (GoalYLevel) goal;
-            minX = player.getX() - settings.yLevelBoxSize.value - renderPosX;
-            minZ = player.getZ() - settings.yLevelBoxSize.value - renderPosZ;
-            maxX = player.getX() + settings.yLevelBoxSize.value - renderPosX;
-            maxZ = player.getZ() + settings.yLevelBoxSize.value - renderPosZ;
-            minY = ((GoalYLevel) goal).level - renderPosY;
+            minX = player.getX() - settings.yLevelBoxSize.value;
+            minZ = player.getZ() - settings.yLevelBoxSize.value;
+            maxX = player.getX() + settings.yLevelBoxSize.value;
+            maxZ = player.getZ() + settings.yLevelBoxSize.value;
+            minY = ((GoalYLevel) goal).level;
             maxY = minY + 2;
-            y1 = 1 + y + goalpos.level - renderPosY;
-            y2 = 1 - y + goalpos.level - renderPosY;
+            y1 = 1 + y + goalpos.level;
+            y2 = 1 - y + goalpos.level;
         } else {
             return;
         }
@@ -312,26 +295,27 @@ public final class PathRenderer implements IRenderer, Helper {
 
 
         buffer.begin(GL_LINES, VertexFormats.POSITION);
-        buffer.vertex(minX, minY, minZ).next();
-        buffer.vertex(minX, maxY, minZ).next();
-        buffer.vertex(maxX, minY, minZ).next();
-        buffer.vertex(maxX, maxY, minZ).next();
-        buffer.vertex(maxX, minY, maxZ).next();
-        buffer.vertex(maxX, maxY, maxZ).next();
-        buffer.vertex(minX, minY, maxZ).next();
-        buffer.vertex(minX, maxY, maxZ).next();
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX, minY, minZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX, maxY, minZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(maxX, minY, minZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(maxX, maxY, minZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX, minY, minZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(maxX, maxY, maxZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX, minY, maxZ));
+        IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX, maxY, maxZ));
         tessellator.draw();
 
         IRenderer.endLines(settings.renderGoalIgnoreDepth.value);
     }
 
     private static void renderHorizontalQuad(double minX, double maxX, double minZ, double maxZ, double y) {
+
         if (y != 0) {
             buffer.begin(GL_LINE_LOOP, VertexFormats.POSITION);
-            buffer.vertex(minX, y, minZ).next();
-            buffer.vertex(maxX, y, minZ).next();
-            buffer.vertex(maxX, y, maxZ).next();
-            buffer.vertex(minX, y, maxZ).next();
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX,y,minZ));
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(maxX,y,minZ));
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(maxX,y,maxZ));
+            IRenderer.putVertex(buffer, IRenderer.camPos(), IRenderer.toVec3d(minX,y,maxZ));
             tessellator.draw();
         }
     }
