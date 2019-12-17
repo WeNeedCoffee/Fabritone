@@ -20,7 +20,6 @@ package baritone.api.utils;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.accessor.IItemStack;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import io.netty.util.concurrent.ThreadPerTaskExecutor;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.*;
@@ -87,7 +86,7 @@ public final class BlockOptionalMeta {
 
     static {
         Map<Object, Object> _normalizations = new HashMap<>();
-        Consumer<Enum> put = instance -> _normalizations.put(instance.getClass(), instance);
+        Consumer<Enum<?>> put = instance -> _normalizations.put(instance.getClass(), instance);
         put.accept(Direction.NORTH);
         put.accept(Direction.Axis.Y);
         put.accept(BlockHalf.BOTTOM);
@@ -234,14 +233,16 @@ public final class BlockOptionalMeta {
     }
 
     private static ImmutableSet<Integer> getStackHashes(Set<BlockState> blockstates) {
+        //noinspection ConstantConditions
         return ImmutableSet.copyOf(
                 blockstates.stream()
-                        .flatMap(state -> !drops(state.getBlock()).isEmpty() ?
-                                drops(state.getBlock()).stream() :
-                                Lists.newArrayList(state.getBlock().asItem()).stream()
-                                        .map(item -> new ItemStack(item, 1))
+                        .flatMap(state -> {
+                            List<Item> originDrops = drops(state.getBlock());
+                            originDrops.add(state.getBlock().asItem());
+                                    return originDrops.stream().map(item -> new ItemStack(item ,1));
+                                }
                         )
-                        .map(stack -> ((IItemStack) stack).getBaritoneHash())
+                        .map(stack -> ((IItemStack) (Object) stack).getBaritoneHash())
                         .toArray(Integer[]::new)
         );
     }
