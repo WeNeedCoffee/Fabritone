@@ -234,29 +234,16 @@ public final class BlockOptionalMeta {
     }
 
     private static ImmutableSet<Integer> getStackHashes(Set<BlockState> blockstates) {
-        if (BaritoneAPI.getSettings().allowNoLootManager.value) {
-            //noinspection ConstantConditions
-            return ImmutableSet.copyOf(
-                    blockstates.stream()
-                            .flatMap(state -> Lists.newArrayList(state.getBlock().asItem())
-                                    .stream()
-                                    .map(item -> new ItemStack(item, 1))
-                            )
-                            .map(stack -> ((IItemStack) (Object) stack).getBaritoneHash())
-                            .toArray(Integer[]::new)
-            );
-        } else {
-            //noinspection ConstantConditions
-            return ImmutableSet.copyOf(
-                    blockstates.stream()
-                            .flatMap(state -> drops(state.getBlock())
-                                    .stream()
-                                    .map(item -> new ItemStack(item, 1))
-                            )
-                            .map(stack -> ((IItemStack) (Object) stack).getBaritoneHash())
-                            .toArray(Integer[]::new)
-            );
-        }
+        return ImmutableSet.copyOf(
+                blockstates.stream()
+                        .flatMap(state -> !drops(state.getBlock()).isEmpty() ?
+                                drops(state.getBlock()).stream() :
+                                Lists.newArrayList(state.getBlock().asItem()).stream()
+                                        .map(item -> new ItemStack(item, 1))
+                        )
+                        .map(stack -> ((IItemStack) stack).getBaritoneHash())
+                        .toArray(Integer[]::new)
+        );
     }
 
     public Block getBlock() {
