@@ -20,6 +20,7 @@ package baritone.api.utils;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.accessor.IItemStack;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import io.netty.util.concurrent.ThreadPerTaskExecutor;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.*;
@@ -237,8 +238,8 @@ public final class BlockOptionalMeta {
         return ImmutableSet.copyOf(
                 blockstates.stream()
                         .flatMap(state -> {
-                            List<Item> originDrops = drops(state.getBlock());
-                            originDrops.add(state.getBlock().asItem());
+                            List<Item> originDrops = Lists.newArrayList(state.getBlock().asItem());
+                            originDrops.addAll(drops(state.getBlock()));
                                     return originDrops.stream().map(item -> new ItemStack(item ,1));
                                 }
                         )
