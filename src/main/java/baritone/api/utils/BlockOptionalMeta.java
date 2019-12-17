@@ -20,6 +20,7 @@ package baritone.api.utils;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.accessor.IItemStack;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import io.netty.util.concurrent.ThreadPerTaskExecutor;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.*;
@@ -233,16 +234,29 @@ public final class BlockOptionalMeta {
     }
 
     private static ImmutableSet<Integer> getStackHashes(Set<BlockState> blockstates) {
-        //noinspection ConstantConditions
-        return ImmutableSet.copyOf(
-                blockstates.stream()
-                        .flatMap(state -> drops(state.getBlock())
-                                .stream()
-                                .map(item -> new ItemStack(item, 1))
-                        )
-                        .map(stack -> ((IItemStack) (Object) stack).getBaritoneHash())
-                        .toArray(Integer[]::new)
-        );
+        if (BaritoneAPI.getSettings().allowNoLootManager.value) {
+            //noinspection ConstantConditions
+            return ImmutableSet.copyOf(
+                    blockstates.stream()
+                            .flatMap(state -> Lists.newArrayList(state.getBlock().asItem())
+                                    .stream()
+                                    .map(item -> new ItemStack(item, 1))
+                            )
+                            .map(stack -> ((IItemStack) (Object) stack).getBaritoneHash())
+                            .toArray(Integer[]::new)
+            );
+        } else {
+            //noinspection ConstantConditions
+            return ImmutableSet.copyOf(
+                    blockstates.stream()
+                            .flatMap(state -> drops(state.getBlock())
+                                    .stream()
+                                    .map(item -> new ItemStack(item, 1))
+                            )
+                            .map(stack -> ((IItemStack) (Object) stack).getBaritoneHash())
+                            .toArray(Integer[]::new)
+            );
+        }
     }
 
     public Block getBlock() {
