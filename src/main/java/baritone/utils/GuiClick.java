@@ -124,8 +124,8 @@ public class GuiClick extends Screen implements Helper {
     }
 
     public void onRender() {
-        RenderSystem.glUniformMatrix4(GL_MODELVIEW_MATRIX, false, (FloatBuffer) MODELVIEW.clear());
-        RenderSystem.glUniformMatrix4(GL_PROJECTION_MATRIX, false, (FloatBuffer) PROJECTION.clear());
+        GL11.glGetFloatv(GL_MODELVIEW_MATRIX, (FloatBuffer) MODELVIEW.clear());
+        GL11.glGetFloatv(GL_PROJECTION_MATRIX, (FloatBuffer) PROJECTION.clear());
         GL11.glGetIntegerv(GL_VIEWPORT, (IntBuffer) VIEWPORT.clear());
 
         if (currentMouseOver != null) {
