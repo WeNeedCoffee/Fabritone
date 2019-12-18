@@ -238,8 +238,11 @@ public final class BlockOptionalMeta {
         return ImmutableSet.copyOf(
                 blockstates.stream()
                         .flatMap(state -> {
-                            List<Item> originDrops = Lists.newArrayList(state.getBlock().asItem());
-                            originDrops.addAll(drops(state.getBlock()));
+                            List<Item> originDrops = Lists.newArrayList(), dropData = drops(state.getBlock());
+                            originDrops.add(state.getBlock().asItem());
+                            if (dropData != null && !dropData.isEmpty()) {
+                                originDrops.addAll(dropData);
+                            }
                                     return originDrops.stream().map(item -> new ItemStack(item ,1));
                                 }
                         )
@@ -307,14 +310,21 @@ public final class BlockOptionalMeta {
     }
 
     private static synchronized List<Item> drops(Block b) {
-        return drops.computeIfAbsent(b, block -> {
-            Identifier lootTableLocation = block.getDropTableId();
+        if (!drops.containsKey(b)) {
+            Identifier lootTableLocation = b.getDropTableId();
             if (lootTableLocation == LootTables.EMPTY) {
                 return Collections.emptyList();
-            } else {
+            } else if (Helper.mc.getServer() != null) {
                 IntegratedServer server = Helper.mc.getServer();
-                return getManager().getSupplier(lootTableLocation).getDrops(new LootContext.Builder(server.getWorld(BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().player().dimension)).setRandom(new Random()).put(LootContextParameters.POSITION, BlockPos.ORIGIN).put(LootContextParameters.TOOL, ItemStack.EMPTY).putNullable(LootContextParameters.BLOCK_ENTITY, null).put(LootContextParameters.BLOCK_STATE, block.getDefaultState()).build(LootContextTypes.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList());
+                drops.put(b, getManager().getSupplier(lootTableLocation).getDrops(new LootContext.Builder(server.getWorld(BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().player().dimension)).setRandom(new Random()).put(LootContextParameters.POSITION, BlockPos.ORIGIN).put(LootContextParameters.TOOL, ItemStack.EMPTY).putNullable(LootContextParameters.BLOCK_ENTITY, null).put(LootContextParameters.BLOCK_STATE, b.getDefaultState()).build(LootContextTypes.BLOCK)).stream().map(ItemStack::getItem).collect(Collectors.toList()));
+                return drops.get(b);
+            } else {
+                return Lists.newArrayList();
             }
-        });
+        } else if (drops.get(b) != null && !drops.get(b).isEmpty()) {
+            return drops.get(b);
+        } else {
+            return Lists.newArrayList();
+        }
     }
 }
