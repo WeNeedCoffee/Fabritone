@@ -19,6 +19,8 @@ package baritone.api.utils;
 
 import baritone.Baritone;
 import baritone.api.BaritoneAPI;
+import baritone.api.Settings;
+import baritone.api.command.IBaritoneChatControl;
 import baritone.api.utils.gui.BaritoneToast;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.toast.ToastManager;
@@ -47,15 +49,14 @@ public interface Helper {
      * Instance of the game
      */
     MinecraftClient mc = MinecraftClient.getInstance();
-
     static Text getPrefix() {
         // Inner text component
-        Text baritone = new LiteralText(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
-        baritone.getStyle().setColor(Formatting.LIGHT_PURPLE);
+        Text baritone = new LiteralText(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "F" : "Fabritone");
+        baritone.getStyle().setColor(Formatting.DARK_GREEN);
 
         // Outer brackets
         Text prefix = new LiteralText("");
-        prefix.getStyle().setColor(Formatting.DARK_PURPLE);
+        prefix.getStyle().setColor(Formatting.DARK_GREEN);
         prefix.append("[");
         prefix.append(baritone);
         prefix.append("]");
@@ -63,6 +64,23 @@ public interface Helper {
         return prefix;
     }
 
+    //Stuff to be able to disable normal Fabritone command handling but still let Aristois bypass the settings
+    default String getSecretPrefix(){
+        return IBaritoneChatControl.FORCE_COMMAND_PREFIX;
+    }
+
+    default void clientMode(boolean mode){
+        Settings settings = Baritone.settings() ;
+        if (mode){
+            settings.prefixControl.value = false;
+            settings.clientMode.value = true;
+            settings.chatControl.reset();
+            settings.chatControlAnyway.reset();
+        }else{
+            settings.prefixControl.value = true;
+            settings.clientMode.reset();
+        }
+    }
     /**
      * Send a message to the toaster to show it as a popup
      *
