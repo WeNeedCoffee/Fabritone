@@ -65,10 +65,6 @@ public interface Helper {
     }
 
     //Stuff to be able to disable normal Fabritone command handling but still let Aristois bypass the settings
-    default String getSecretPrefix(){
-        return IBaritoneChatControl.FORCE_COMMAND_PREFIX;
-    }
-
     default void clientMode(boolean mode){
         Settings settings = Baritone.settings() ;
         if (mode){
