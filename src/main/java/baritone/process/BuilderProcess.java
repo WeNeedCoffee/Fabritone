@@ -39,7 +39,7 @@ import baritone.utils.BlockStateInterface;
 import baritone.utils.PathingCommandContext;
 import baritone.utils.schematic.FillSchematic;
 import baritone.utils.schematic.MapArtSchematic;
-import baritone.utils.schematic.Schematic;
+import baritone.utils.schematic.format.SchematicFormat;
 import baritone.utils.schematic.schematica.SchematicaHelper;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.block.AirBlock;
@@ -51,8 +51,6 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.hit.BlockHitResult;
@@ -62,7 +60,6 @@ import net.minecraft.util.shape.VoxelShape;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 
 import static baritone.api.pathing.movement.ActionCosts.COST_INF;
@@ -124,18 +121,24 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public boolean build(String name, File schematic, Vec3i origin) {
-        Tag tag;
-        try (FileInputStream fileIn = new FileInputStream(schematic)) {
-            tag = NbtIo.readCompressed(fileIn);
-        } catch (IOException e) {
+        Optional<SchematicFormat> format = SchematicFormat.getByFile(schematic);
+        if (!format.isPresent()) {
+            return false;
+        }
+
+        ISchematic parsed;
+        try {
+            parsed = format.get().getParser().parse(new FileInputStream(schematic));
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-        //noinspection ConstantConditions
-        if (tag == null) {
-            return false;
+
+        if (Baritone.settings().mapArtMode.value) {
+            parsed = new MapArtSchematic(parsed);
         }
-        build(name, parse(tag), origin);
+
+        build(name, parsed, origin);
         return true;
     }
 
@@ -164,10 +167,6 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     @Override
     public List<BlockState> getApproxPlaceable() {
         return new ArrayList<>(approxPlaceable);
-    }
-
-    private static ISchematic parse(Tag schematic) {
-        return Baritone.settings().mapArtMode.value ? new MapArtSchematic(schematic) : new Schematic(schematic);
     }
 
     @Override
