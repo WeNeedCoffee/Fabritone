@@ -17,8 +17,7 @@
 
 package baritone.utils.schematic.parse;
 
-import baritone.api.schematic.AbstractSchematic;
-import baritone.api.schematic.ISchematic;
+import baritone.utils.schematic.StaticSchematic;
 import baritone.utils.schematic.format.SchematicFormat;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -28,7 +27,6 @@ import net.minecraft.util.registry.Registry;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 /**
  * An implementation of {@link ISchematicParser} for {@link SchematicFormat#MCEDIT}
@@ -40,13 +38,11 @@ public enum MCEditParser implements ISchematicParser {
     INSTANCE;
 
     @Override
-    public ISchematic parse(InputStream input) throws IOException {
+    public StaticSchematic parse(InputStream input) throws IOException {
         return new MCEditSchematic(NbtIo.readCompressed(input));
     }
 
-    private static final class MCEditSchematic extends AbstractSchematic {
-
-        private final BlockState[][][] states;
+    private static final class MCEditSchematic extends StaticSchematic {
 
         MCEditSchematic(CompoundTag schematic) {
             String type = schematic.getString("Materials");
@@ -57,7 +53,7 @@ public enum MCEditParser implements ISchematicParser {
             this.y = schematic.getInt("Height");
             this.z = schematic.getInt("Length");
             byte[] blocks = schematic.getByteArray("Blocks");
-            byte[] metadata = schematic.getByteArray("Data");
+            //byte[] metadata = schematic.getByteArray("Data");
 
             byte[] additional = null;
             if (schematic.containsKey("AddBlocks")) {
@@ -80,18 +76,13 @@ public enum MCEditParser implements ISchematicParser {
                             blockID |= additional[blockInd] << 8;
                         }
                         Block block = Registry.BLOCK.get(blockID);
-                        int meta = metadata[blockInd] & 0xFF;
 
                         // TODO: Find a way to keep using metadata to get a proper BlockState (Fabritone)
+                        //int meta = metadata[blockInd] & 0xFF;
                         this.states[x][z][y] = block.getDefaultState();
                     }
                 }
             }
-        }
-
-        @Override
-        public final BlockState desiredState(int x, int y, int z, BlockState current, List<BlockState> approxPlaceable) {
-            return this.states[x][z][y];
         }
     }
 }
