@@ -105,7 +105,7 @@ public final class SpongeSchematic extends StaticSchematic {
             this.properties = properties;
         }
 
-        BlockState deserialize() {
+        private BlockState deserialize() {
             if (this.blockState == null) {
                 Block block = Registry.BLOCK.get(this.resourceLocation);
                 this.blockState = block.getDefaultState();
@@ -129,7 +129,7 @@ public final class SpongeSchematic extends StaticSchematic {
             return this.blockState;
         }
 
-        static SerializedBlockState getFromString(String s) {
+        private static SerializedBlockState getFromString(String s) {
             Matcher m = REGEX.matcher(s);
             if (!m.matches()) {
                 return null;
