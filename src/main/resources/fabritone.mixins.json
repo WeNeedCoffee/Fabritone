@@ -22,7 +22,6 @@
     "MixinLootContext",
     "MixinMinecraft",
     "MixinNetworkManager",
-    "MixinPlayerController",
-    "MixinScreen"
+    "MixinPlayerController"
   ]
 }

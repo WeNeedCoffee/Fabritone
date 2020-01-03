@@ -20,7 +20,7 @@ package baritone.command;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.Settings;
-import baritone.utils.accessor.IGuiScreen;
+import baritone.utils.accessor.GuiScreenUtils;
 import baritone.api.event.events.ChatEvent;
 import baritone.api.event.events.TabCompleteEvent;
 import baritone.api.event.listener.AbstractGameEventListener;
@@ -100,7 +100,7 @@ public class BaritoneChatControl implements Helper, AbstractGameEventListener {
             return false;
         } else if (msg.trim().equalsIgnoreCase("orderpizza")) {
             try {
-                ((IGuiScreen) mc.currentScreen).openLink(new URI("https://www.dominos.com/en/pages/order/"));
+                GuiScreenUtils.openUrl(new URI("https://www.dominos.com/en/pages/order/"));
             } catch (NullPointerException | URISyntaxException ignored) {}
             return false;
         }
@@ -112,7 +112,7 @@ public class BaritoneChatControl implements Helper, AbstractGameEventListener {
         String rest = msg.substring(pair.getLeft().length());
         ArgConsumer argc = new ArgConsumer(this.manager, pair.getRight());
         if (!argc.hasAny()) {
-            Settings.Setting setting = settings.byLowerName.get(command.toLowerCase(Locale.US));
+            Settings.Setting<?> setting = settings.byLowerName.get(command.toLowerCase(Locale.US));
             if (setting != null) {
                 logRanCommand(command, rest);
                 if (setting.getValueClass() == Boolean.class) {
@@ -123,7 +123,7 @@ public class BaritoneChatControl implements Helper, AbstractGameEventListener {
                 return true;
             }
         } else if (argc.hasExactlyOne()) {
-            for (Settings.Setting setting : settings.allSettings) {
+            for (Settings.Setting<?> setting : settings.allSettings) {
                 if (setting.getName().equals("logger")) {
                     continue;
                 }
@@ -176,7 +176,7 @@ public class BaritoneChatControl implements Helper, AbstractGameEventListener {
                             .filterPrefix(argc.getString())
                             .stream();
                 }
-                Settings.Setting setting = settings.byLowerName.get(argc.getString().toLowerCase(Locale.US));
+                Settings.Setting<?> setting = settings.byLowerName.get(argc.getString().toLowerCase(Locale.US));
                 if (setting != null) {
                     if (setting.getValueClass() == Boolean.class) {
                         TabCompleteHelper helper = new TabCompleteHelper();
