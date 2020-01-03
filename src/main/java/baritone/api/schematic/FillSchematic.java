@@ -32,15 +32,16 @@ public class FillSchematic extends AbstractSchematic {
         this.bom = bom;
     }
 
+    public FillSchematic(int x, int y, int z, BlockState state) {
+        this(x, y, z, new BlockOptionalMeta(state.getBlock()));
+    }
+
     public BlockOptionalMeta getBom() {
         return bom;
     }
 
     @Override
     public BlockState desiredState(int x, int y, int z, BlockState current, List<BlockState> approxPlaceable) {
-        // TODO: is this even necessary???
-        // Builder will already handle logic that requires breaking blocks before replacing them, and non-api Fill Schematic
-        // is used for clear area and doesn't have any issues.
         if (bom.matches(current)) {
             return current;
         } else if (current.getBlock() != Blocks.AIR) {
