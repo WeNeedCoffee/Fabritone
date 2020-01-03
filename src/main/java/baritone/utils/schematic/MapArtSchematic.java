@@ -17,24 +17,20 @@
 
 package baritone.utils.schematic;
 
-import baritone.api.schematic.AbstractSchematic;
 import baritone.api.schematic.ISchematic;
+import baritone.api.schematic.MaskSchematic;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.Tag;
 
-import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.Predicate;
 
-public class MapArtSchematic extends AbstractSchematic {
+public class MapArtSchematic extends MaskSchematic {
 
-    private final ISchematic child;
     private final int[][] heightMap;
 
     public MapArtSchematic(ISchematic schematic) {
-        super(schematic.widthX(), schematic.heightY(), schematic.lengthZ());
-        this.child = schematic;
+        super(schematic);
 
         heightMap = new int[schematic.widthX()][schematic.lengthZ()];
 
@@ -64,28 +60,7 @@ public class MapArtSchematic extends AbstractSchematic {
     }
 
     @Override
-    public boolean inSchematic(int x, int y, int z, BlockState currentState) {
-        // in map art, we only care about coordinates in or above the art
-        return this.child.inSchematic(x, y, z, currentState) && y >= heightMap[x][z];
-    }
-
-    @Override
-    public BlockState desiredState(int x, int y, int z, BlockState current, List<BlockState> approxPlaceable) {
-        return this.child.desiredState(x, y, z, current, approxPlaceable);
-    }
-
-    @Override
-    public int widthX() {
-        return this.child.widthX();
-    }
-
-    @Override
-    public int heightY() {
-        return this.child.heightY();
-    }
-
-    @Override
-    public int lengthZ() {
-        return this.child.lengthZ();
+    protected boolean partOfMask(int x, int y, int z, BlockState currentState) {
+        return y >= heightMap[x][z];
     }
 }
