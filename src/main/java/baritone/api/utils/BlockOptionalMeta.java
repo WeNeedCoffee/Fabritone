@@ -185,12 +185,19 @@ public final class BlockOptionalMeta {
         return (C) value;
     }
 
+    /**
+     * Normalizes the specified blockstate by setting meta-affecting properties which
+     * are not being targeted by the meta parameter to their default values.
+     * <p>
+     * For example, block variant/color is the primary target for the meta value, so properties
+     * such as rotation/facing direction will be set to default values in order to nullify
+     * the effect that they have on the state's meta value.
+     *
+     * @param state The state to normalize
+     * @return The normalized block state
+     */
     public static BlockState normalize(BlockState state) {
         BlockState newState = state;
-
-        // TODO: Can the state not be normalized by simply doing...?
-        // return state.getBlock().getDefaultState();
-        // ???
 
         for (Property<?> property : state.getProperties()) {
             Class<?> valueClass = property.getValueType();
@@ -221,6 +228,15 @@ public final class BlockOptionalMeta {
         return newState;
     }
 
+    /**
+     * Evaluate the target meta value for the specified state. The target meta value is
+     * most often that which is influenced by the variant/color property of the block state.
+     *
+     * @see #normalize(BlockState)
+     *
+     * @param state The state to check
+     * @return The target meta of the state
+     */
     public static int stateMeta(BlockState state) {
         return state.hashCode();
     }
