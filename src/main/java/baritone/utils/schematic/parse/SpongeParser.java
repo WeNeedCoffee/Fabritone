@@ -19,9 +19,8 @@ package baritone.utils.schematic.parse;
 
 import baritone.api.schematic.AbstractSchematic;
 import baritone.api.schematic.ISchematic;
-import baritone.api.utils.BlockOptionalMeta;
 import baritone.utils.schematic.format.SchematicFormat;
-import io.netty.buffer.Unpooled;
+import baritone.utils.type.VarInt;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -29,7 +28,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
 
 import java.io.IOException;
@@ -99,16 +97,17 @@ public enum SpongeParser implements ISchematicParser {
             }
 
             // BlockData is stored as an NBT byte[], however, the actual data that is represented is a varint[].
-            // This is kind of a hacky approach but it works /shrug
             byte[] rawBlockData = nbt.getByteArray("BlockData");
             int[] blockData = new int[this.x * this.y * this.z];
-            PacketByteBuf buffer = new PacketByteBuf(Unpooled.wrappedBuffer(rawBlockData));
+            int offset = 0;
             for (int i = 0; i < blockData.length; i++) {
-                if (buffer.readableBytes() > 0) {
-                    blockData[i] = buffer.readVarInt();
-                } else {
-                    throw new IllegalArgumentException("Buffer has no remaining bytes");
+                if (offset >= blockData.length) {
+                    throw new IllegalArgumentException("No remaining bytes in BlockData for complete schematic");
                 }
+
+                VarInt varInt = VarInt.read(rawBlockData, offset);
+                blockData[i] = varInt.getValue();
+                offset += varInt.getSize();
             }
 
             for (int y = 0; y < this.y; y++) {
@@ -145,22 +144,13 @@ public enum SpongeParser implements ISchematicParser {
             this.properties = properties;
         }
 
-        Identifier getResourceLocation() {
-            return this.resourceLocation;
-        }
-
-        Map<String, String> getProperties() {
-            return this.properties;
-        }
-
         BlockState deserialize() {
             if (this.blockState == null) {
-                // Get the base state for the block specified
-                this.blockState = Registry.BLOCK.get(this.resourceLocation).getDefaultState();
+                Block block = Registry.BLOCK.get(this.resourceLocation);
+                this.blockState = block.getDefaultState();
 
-                // AFAIK it is best to order the property keys so that Minecraft caches the Block States ideally
+                // Note: Sorting differs here in Fabritone, but should remain the same output
                 this.properties.keySet().stream().sorted(String::compareTo).forEachOrdered(key -> {
-                    // getProperty(String) when lol
                     Property<?> property = null;
 
                     for (Property<?> p : this.blockState.getProperties()) {
@@ -171,17 +161,9 @@ public enum SpongeParser implements ISchematicParser {
                     }
 
                     if (property != null) {
-                        Optional<?> value = property.getValue(this.properties.get(key));
-                        if (value.isPresent()) {
-                            this.blockState = this.blockState.with(
-                                    BlockOptionalMeta.castToIProperty(property),
-                                    BlockOptionalMeta.castToIPropertyValue(property, value)
-                            );
-                        } else {
-                            throw new IllegalArgumentException();
-                        }
+                        this.blockState = setPropertyValue(this.blockState, property, this.properties.get(key));
                     } else {
-                        throw new IllegalArgumentException();
+                        throw new IllegalArgumentException("Invalid property");
                     }
                 });
             }
@@ -211,6 +193,15 @@ public enum SpongeParser implements ISchematicParser {
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
+            }
+        }
+
+        private static <T extends Comparable<T>> BlockState setPropertyValue(BlockState state, Property<T> property, String value) {
+            Optional<T> parsed = property.getValue(value);
+            if (parsed.isPresent()) {
+                return state.with(property, parsed.get());
+            } else {
+                throw new IllegalArgumentException("Invalid value for property " + property);
             }
         }
     }
