@@ -41,7 +41,7 @@ public final class MCEditSchematic extends StaticSchematic {
         byte[] metadata = schematic.getByteArray("Data");
 
         byte[] additional = null;
-        if (schematic.containsKey("AddBlocks")) {
+        if (schematic.contains("AddBlocks")) {
             byte[] addBlocks = schematic.getByteArray("AddBlocks");
             additional = new byte[addBlocks.length * 2];
             for (int i = 0; i < addBlocks.length; i++) {
