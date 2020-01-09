@@ -51,17 +51,26 @@ public interface Helper {
     MinecraftClient mc = MinecraftClient.getInstance();
     static Text getPrefix() {
         // Inner text component
-        Text baritone = new LiteralText(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "F" : "Fabritone");
-        baritone.getStyle().setColor(Formatting.DARK_GREEN);
+        Text baritone = new LiteralText(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
+        baritone.getStyle().setColor(Formatting.LIGHT_PURPLE);
+
+        Text fabric = new LiteralText(BaritoneAPI.getSettings().shortBaritonePrefix.value ? "F" : "Fabric");
+        fabric.getStyle().setColor(Formatting.GREEN);
 
         // Outer brackets
         Text prefix = new LiteralText("");
         prefix.getStyle().setColor(Formatting.DARK_GREEN);
         prefix.append("[");
-        prefix.append(baritone);
+        prefix.append(fabric);
         prefix.append("]");
 
-        return prefix;
+        Text prefix2 = new LiteralText("");
+        prefix2.getStyle().setColor(Formatting.DARK_PURPLE);
+        prefix2.append("[");
+        prefix2.append(baritone);
+        prefix2.append("]");
+
+        return new LiteralText(prefix.asFormattedString() + " " + prefix2.asFormattedString());
     }
 
     //Stuff to be able to disable normal Fabritone command handling but still let Aristois bypass the settings
