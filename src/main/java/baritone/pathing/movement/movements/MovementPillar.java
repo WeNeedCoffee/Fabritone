@@ -22,7 +22,7 @@ import baritone.api.IBaritone;
 import baritone.api.pathing.movement.MovementStatus;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.Rotation;
-import baritone.api.utils.RotationUtils;
+import baritone.api.utils.BRotationUtils;
 import baritone.api.utils.VecUtils;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.CalculationContext;
@@ -170,7 +170,7 @@ public class MovementPillar extends Movement {
         BlockState fromDown = BlockStateInterface.get(ctx, src);
         if (MovementHelper.isWater(fromDown) && MovementHelper.isWater(ctx, dest)) {
             // stay centered while swimming up a water column
-            state.setTarget(new MovementState.MovementTarget(RotationUtils.calcRotationFromVec3d(ctx.playerHead(), VecUtils.getBlockPosCenter(dest), ctx.playerRotations()), false));
+            state.setTarget(new MovementState.MovementTarget(BRotationUtils.calcRotationFromVec3d(ctx.playerHead(), VecUtils.getBlockPosCenter(dest), ctx.playerRotations()), false));
             Vec3d destCenter = VecUtils.getBlockPosCenter(dest);
             if (Math.abs(ctx.player().getX() - destCenter.x) > 0.2 || Math.abs(ctx.player().getZ() - destCenter.z) > 0.2) {
                 state.setInput(Input.MOVE_FORWARD, true);
@@ -182,7 +182,7 @@ public class MovementPillar extends Movement {
         }
         boolean ladder = fromDown.getBlock() == Blocks.LADDER || fromDown.getBlock() == Blocks.VINE;
         boolean vine = fromDown.getBlock() == Blocks.VINE;
-        Rotation rotation = RotationUtils.calcRotationFromVec3d(ctx.player().getCameraPosVec(1.0F),
+        Rotation rotation = BRotationUtils.calcRotationFromVec3d(ctx.player().getCameraPosVec(1.0F),
                 VecUtils.getBlockPosCenter(positionToPlace),
                 new Rotation(ctx.player().yaw, ctx.player().pitch));
         if (!ladder) {
@@ -245,7 +245,7 @@ public class MovementPillar extends Movement {
                 Block fr = frState.getBlock();
                 // TODO: Evaluate usage of getMaterial().isReplaceable()
                 if (!(fr instanceof AirBlock || frState.getMaterial().isReplaceable())) {
-                    RotationUtils.reachable(ctx.player(), src, ctx.playerController().getBlockReachDistance())
+                    BRotationUtils.reachable(ctx.player(), src, ctx.playerController().getBlockReachDistance())
                             .map(rot -> new MovementState.MovementTarget(rot, true))
                             .ifPresent(state::setTarget);
                     state.setInput(Input.JUMP, false); // breaking is like 5x slower when you're jumping

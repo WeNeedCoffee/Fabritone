@@ -42,7 +42,7 @@ public final class RayTraceUtils {
      */
     public static HitResult rayTraceTowards(Entity entity, Rotation rotation, double blockReachDistance) {
         Vec3d start = entity.getCameraPosVec(1.0F);
-        Vec3d direction = RotationUtils.calcVec3dFromRotation(rotation);
+        Vec3d direction = BRotationUtils.calcVec3dFromRotation(rotation);
         Vec3d end = start.add(
                 direction.x * blockReachDistance,
                 direction.y * blockReachDistance,

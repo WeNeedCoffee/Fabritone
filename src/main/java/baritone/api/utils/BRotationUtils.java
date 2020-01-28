@@ -36,7 +36,7 @@ import java.util.Optional;
  * @author Brady
  * @since 9/25/2018
  */
-public final class RotationUtils {
+public final class BRotationUtils {
 
     /**
      * Constant that a degree value is multiplied by to get the equivalent radian value
@@ -60,7 +60,7 @@ public final class RotationUtils {
             new Vec3d(1, 0.5, 0.5)  // East
     };
 
-    private RotationUtils() {}
+    private BRotationUtils() {}
 
     /**
      * Calculates the rotation from BlockPos<sub>dest</sub> to BlockPos<sub>orig</sub>

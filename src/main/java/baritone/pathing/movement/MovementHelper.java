@@ -30,14 +30,19 @@ import baritone.utils.ToolSet;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.fluid.*;
+import net.minecraft.server.network.packet.PlayerMoveC2SPacket;
 import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
-
+import net.minecraft.world.RayTraceContext;
+import net.wurstclient.util.BlockUtils;
+import net.wurstclient.util.RotationUtils;
+import net.wurstclient.util.RotationUtils.Rotation;
 import java.util.Optional;
 
 import static baritone.pathing.movement.Movement.HORIZONTALS_BUT_ALSO_DOWN_____SO_EVERY_DIRECTION_EXCEPT_UP;
@@ -438,7 +443,7 @@ public interface MovementHelper extends ActionCosts, Helper {
 
     static void moveTowards(IPlayerContext ctx, MovementState state, BlockPos pos) {
         state.setTarget(new MovementTarget(
-                new Rotation(RotationUtils.calcRotationFromVec3d(ctx.playerHead(),
+                new baritone.api.utils.Rotation(BRotationUtils.calcRotationFromVec3d(ctx.playerHead(),
                         VecUtils.getBlockPosCenter(pos),
                         ctx.playerRotations()).getYaw(), ctx.player().pitch),
                 false
@@ -522,27 +527,25 @@ public interface MovementHelper extends ActionCosts, Helper {
 
     static PlaceResult attemptToPlaceABlock(MovementState state, IBaritone baritone, BlockPos placeAt, boolean preferDown) {
         IPlayerContext ctx = baritone.getPlayerContext();
-        Optional<Rotation> direct = RotationUtils.reachable(ctx, placeAt); // we assume that if there is a block there, it must be replacable
+        Optional<baritone.api.utils.Rotation> direct = BRotationUtils.reachable(ctx, placeAt); // we assume that if there is a block there, it must be replacable
         boolean found = false;
         if (direct.isPresent()) {
             state.setTarget(new MovementTarget(direct.get(), true));
             found = true;
         }
-        for (int i = 0; i < 5; i++) {
-            BlockPos against1 = placeAt.offset(HORIZONTALS_BUT_ALSO_DOWN_____SO_EVERY_DIRECTION_EXCEPT_UP[i]);
-            if (MovementHelper.canPlaceAgainst(ctx, against1)) {
+        Vec3d posVec = new Vec3d(placeAt).add(0.5, 0.5, 0.5);
+        for (Direction side : Direction.values()) {
+			BlockPos neighbor = placeAt.offset(side);
+			if (MovementHelper.canPlaceAgainst(ctx, neighbor)) {
                 if (!((Baritone) baritone).getInventoryBehavior().selectThrowawayForLocation(false, placeAt.getX(), placeAt.getY(), placeAt.getZ())) { // get ready to place a throwaway block
                     Helper.HELPER.logDebug("bb pls get me some blocks. dirt, netherrack, cobble");
                     state.setStatus(MovementStatus.UNREACHABLE);
                     return PlaceResult.NO_OPTION;
                 }
-                double faceX = (placeAt.getX() + against1.getX() + 1.0D) * 0.5D;
-                double faceY = (placeAt.getY() + against1.getY() + 0.5D) * 0.5D;
-                double faceZ = (placeAt.getZ() + against1.getZ() + 1.0D) * 0.5D;
-                Rotation place = RotationUtils.calcRotationFromVec3d(ctx.playerHead(), new Vec3d(faceX, faceY, faceZ), ctx.playerRotations());
-                HitResult res = RayTraceUtils.rayTraceTowards(ctx.player(), place, ctx.playerController().getBlockReachDistance());
-                if (res != null && res.getType() == HitResult.Type.BLOCK && ((BlockHitResult) res).getPos().equals(against1) && ((BlockHitResult) res).getBlockPos().offset(((BlockHitResult) res).getSide()).equals(placeAt)) {
-                    state.setTarget(new MovementTarget(place, true));
+                Rotation place =  RotationUtils.getNeededRotations(posVec.add(new Vec3d(side.getVector()).multiply(0.5)));
+                HitResult res = RayTraceUtils.rayTraceTowards(ctx.player(), new baritone.api.utils.Rotation(place.getYaw(), place.getPitch()), ctx.playerController().getBlockReachDistance());
+                if (res != null && res.getType() == HitResult.Type.BLOCK && ((BlockHitResult) res).getBlockPos().equals(neighbor) && ((BlockHitResult) res).getBlockPos().offset(((BlockHitResult) res).getSide()).equals(placeAt)) {
+                    state.setTarget(new MovementTarget(new baritone.api.utils.Rotation(place.getYaw(), place.getPitch()), true));
                     found = true;
 
                     if (!preferDown) {
@@ -552,7 +555,7 @@ public interface MovementHelper extends ActionCosts, Helper {
                     }
                 }
             }
-        }
+		}
         if (ctx.getSelectedBlock().isPresent()) {
             BlockPos selectedBlock = ctx.getSelectedBlock().get();
             Direction side = ((BlockHitResult) ctx.objectMouseOver()).getSide();

@@ -21,7 +21,7 @@ import baritone.api.IBaritone;
 import baritone.api.pathing.movement.MovementStatus;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.Rotation;
-import baritone.api.utils.RotationUtils;
+import baritone.api.utils.BRotationUtils;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.Movement;
@@ -224,7 +224,7 @@ public class MovementDescend extends Movement {
             double destZ = (src.getZ() + 0.5) * 0.17 + (dest.getZ() + 0.5) * 0.83;
             ClientPlayerEntity player = ctx.player();
             state.setTarget(new MovementState.MovementTarget(
-                    new Rotation(RotationUtils.calcRotationFromVec3d(player.getCameraPosVec(1.0F),
+                    new Rotation(BRotationUtils.calcRotationFromVec3d(player.getCameraPosVec(1.0F),
                             new Vec3d(destX, dest.getY(), destZ),
                             new Rotation(player.yaw, player.pitch)).getYaw(), player.pitch),
                     false
