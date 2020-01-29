@@ -1,29 +1,14 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.cache;
-
-import baritone.Baritone;
-import baritone.api.cache.IWorldProvider;
-import baritone.api.utils.Helper;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.server.world.ServerWorld;
-import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,6 +18,13 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.SystemUtils;
+import baritone.Baritone;
+import baritone.api.cache.IWorldProvider;
+import baritone.api.utils.Helper;
+import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.dimension.DimensionType;
 
 /**
  * @author Brady
@@ -40,80 +32,81 @@ import java.util.function.Consumer;
  */
 public class WorldProvider implements IWorldProvider, Helper {
 
-    private static final Map<Path, WorldData> worldCache = new HashMap<>(); // this is how the bots have the same cached world
+	private static final Map<Path, WorldData> worldCache = new HashMap<>(); // this is how the bots have the same cached world
 
-    private WorldData currentWorld;
+	private WorldData currentWorld;
 
-    @Override
-    public final WorldData getCurrentWorld() {
-        return this.currentWorld;
-    }
+	public final void closeWorld() {
+		WorldData world = currentWorld;
+		currentWorld = null;
+		if (world == null)
+			return;
+		world.onClose();
+	}
 
-    /**
-     * Called when a new world is initialized to discover the
-     *
-     * @param dimension The ID of the world's dimension
-     */
-    public final void initWorld(DimensionType dimension) {
-        File directory;
-        File readme;
+	@Override
+	public final WorldData getCurrentWorld() {
+		return currentWorld;
+	}
 
-        IntegratedServer integratedServer = mc.getServer();
+	public final void ifWorldLoaded(Consumer<WorldData> currentWorldConsumer) {
+		if (currentWorld != null) {
+			currentWorldConsumer.accept(currentWorld);
+		}
+	}
 
-        // If there is an integrated server running (Aka Singleplayer) then do magic to find the world save file
-        if (mc.isInSingleplayer()) {
-            ServerWorld localServerWorld = integratedServer.getWorld(dimension);
-            directory = dimension.getSaveDirectory(localServerWorld.getSaveHandler().getWorldDir());
+	/**
+	 * Called when a new world is initialized to discover the
+	 *
+	 * @param dimension The ID of the world's dimension
+	 */
+	public final void initWorld(DimensionType dimension) {
+		File directory;
+		File readme;
 
-            // Gets the "depth" of this directory relative the the game's run directory, 2 is the location of the world
-            if (directory.toPath().relativize(mc.runDirectory.toPath()).getNameCount() != 2) {
-                // subdirectory of the main save directory for this world
-                directory = directory.getParentFile();
-            }
+		IntegratedServer integratedServer = mc.getServer();
 
-            directory = new File(directory, "baritone");
-            readme = directory;
-        } else { // Otherwise, the server must be remote...
-            String folderName = mc.isConnectedToRealms() ? "realms" : mc.getCurrentServerEntry().address;
-            if (SystemUtils.IS_OS_WINDOWS) {
-                folderName = folderName.replace(":", "_");
-            }
-            directory = new File(Baritone.getDir(), folderName);
-            readme = Baritone.getDir();
-        }
+		// If there is an integrated server running (Aka Singleplayer) then do magic to find the world save file
+		if (mc.isInSingleplayer()) {
+			ServerWorld localServerWorld = integratedServer.getWorld(dimension);
+			directory = dimension.getSaveDirectory(localServerWorld.getSaveHandler().getWorldDir());
 
-        // lol wtf is this baritone folder in my minecraft save?
-        try (FileOutputStream out = new FileOutputStream(new File(readme, "readme.txt"))) {
-            // good thing we have a readme
-            out.write("https://github.com/cabaletta/baritone\n".getBytes());
-        } catch (IOException ignored) {}
+			// Gets the "depth" of this directory relative the the game's run directory, 2 is the location of the world
+			if (directory.toPath().relativize(mc.runDirectory.toPath()).getNameCount() != 2) {
+				// subdirectory of the main save directory for this world
+				directory = directory.getParentFile();
+			}
 
-        // We will actually store the world data in a subfolder: "DIM<id>"
-        Path dir = new File(directory, "DIM" + dimension.getRawId()).toPath();
-        if (!Files.exists(dir)) {
-            try {
-                Files.createDirectories(dir);
-            } catch (IOException ignored) {}
-        }
+			directory = new File(directory, "baritone");
+			readme = directory;
+		} else { // Otherwise, the server must be remote...
+			String folderName = mc.isConnectedToRealms() ? "realms" : mc.getCurrentServerEntry().address;
+			if (SystemUtils.IS_OS_WINDOWS) {
+				folderName = folderName.replace(":", "_");
+			}
+			directory = new File(Baritone.getDir(), folderName);
+			readme = Baritone.getDir();
+		}
 
-        System.out.println("Baritone world data dir: " + dir);
-        synchronized (worldCache) {
-            this.currentWorld = worldCache.computeIfAbsent(dir, d -> new WorldData(d, dimension.getRawId()));
-        }
-    }
+		// lol wtf is this baritone folder in my minecraft save?
+		try (FileOutputStream out = new FileOutputStream(new File(readme, "readme.txt"))) {
+			// good thing we have a readme
+			out.write("https://github.com/cabaletta/baritone\n".getBytes());
+		} catch (IOException ignored) {
+		}
 
-    public final void closeWorld() {
-        WorldData world = this.currentWorld;
-        this.currentWorld = null;
-        if (world == null) {
-            return;
-        }
-        world.onClose();
-    }
+		// We will actually store the world data in a subfolder: "DIM<id>"
+		Path dir = new File(directory, "DIM" + dimension.getRawId()).toPath();
+		if (!Files.exists(dir)) {
+			try {
+				Files.createDirectories(dir);
+			} catch (IOException ignored) {
+			}
+		}
 
-    public final void ifWorldLoaded(Consumer<WorldData> currentWorldConsumer) {
-        if (this.currentWorld != null) {
-            currentWorldConsumer.accept(this.currentWorld);
-        }
-    }
+		System.out.println("Baritone world data dir: " + dir);
+		synchronized (worldCache) {
+			currentWorld = worldCache.computeIfAbsent(dir, d -> new WorldData(d, dimension.getRawId()));
+		}
+	}
 }

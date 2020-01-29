@@ -9,49 +9,48 @@ import net.minecraft.util.math.Box;
 
 public class SelectionRenderer implements IRenderer, AbstractGameEventListener {
 
-    public static final double SELECTION_BOX_EXPANSION = .005D;
+	public static final double SELECTION_BOX_EXPANSION = .005D;
 
-    private final SelectionManager manager;
+	public static void renderSelections(ISelection[] selections) {
+		float opacity = settings.selectionOpacity.value;
+		boolean ignoreDepth = settings.renderSelectionIgnoreDepth.value;
+		float lineWidth = settings.selectionLineWidth.value;
 
-    SelectionRenderer(Baritone baritone, SelectionManager manager) {
-        this.manager = manager;
-        baritone.getGameEventHandler().registerEventListener(this);
-    }
+		if (!settings.renderSelection.value)
+			return;
 
-    public static void renderSelections(ISelection[] selections) {
-        float opacity = settings.selectionOpacity.value;
-        boolean ignoreDepth = settings.renderSelectionIgnoreDepth.value;
-        float lineWidth = settings.selectionLineWidth.value;
+		IRenderer.startLines(settings.colorSelection.value, opacity, lineWidth, ignoreDepth);
 
-        if (!settings.renderSelection.value) {
-            return;
-        }
+		for (ISelection selection : selections) {
+			IRenderer.drawAABB(selection.aabb(), SELECTION_BOX_EXPANSION);
+		}
 
-        IRenderer.startLines(settings.colorSelection.value, opacity, lineWidth, ignoreDepth);
+		if (settings.renderSelectionCorners.value) {
+			IRenderer.glColor(settings.colorSelectionPos1.value, opacity);
 
-        for (ISelection selection : selections) {
-            IRenderer.drawAABB(selection.aabb(), SELECTION_BOX_EXPANSION);
-        }
+			for (ISelection selection : selections) {
+				IRenderer.drawAABB(new Box(selection.pos1(), selection.pos1().add(1, 1, 1)));
+			}
 
-        if (settings.renderSelectionCorners.value) {
-            IRenderer.glColor(settings.colorSelectionPos1.value, opacity);
+			IRenderer.glColor(settings.colorSelectionPos2.value, opacity);
 
-            for (ISelection selection : selections) {
-                IRenderer.drawAABB(new Box(selection.pos1(), selection.pos1().add(1, 1, 1)));
-            }
+			for (ISelection selection : selections) {
+				IRenderer.drawAABB(new Box(selection.pos2(), selection.pos2().add(1, 1, 1)));
+			}
+		}
 
-            IRenderer.glColor(settings.colorSelectionPos2.value, opacity);
+		IRenderer.endLines(ignoreDepth);
+	}
 
-            for (ISelection selection : selections) {
-                IRenderer.drawAABB(new Box(selection.pos2(), selection.pos2().add(1, 1, 1)));
-            }
-        }
+	private final SelectionManager manager;
 
-        IRenderer.endLines(ignoreDepth);
-    }
+	SelectionRenderer(Baritone baritone, SelectionManager manager) {
+		this.manager = manager;
+		baritone.getGameEventHandler().registerEventListener(this);
+	}
 
-    @Override
-    public void onRenderPass(RenderEvent event) {
-        renderSelections(manager.getSelections());
-    }
+	@Override
+	public void onRenderPass(RenderEvent event) {
+		renderSelections(manager.getSelections());
+	}
 }

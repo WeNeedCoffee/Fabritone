@@ -1,18 +1,11 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.utils;
@@ -20,39 +13,38 @@ package baritone.utils;
 import baritone.api.utils.input.Input;
 
 public class PlayerMovementInput extends net.minecraft.client.input.Input {
-    private final InputOverrideHandler handler;
+	private final InputOverrideHandler handler;
 
-    PlayerMovementInput(InputOverrideHandler handler) {
-        this.handler = handler;
-    }
+	PlayerMovementInput(InputOverrideHandler handler) {
+		this.handler = handler;
+	}
 
-    @Override
-    public void tick(boolean p_217607_1_) {
-        this.movementSideways = 0.0F;
-        this.movementForward = 0.0F;
+	@Override
+	public void tick(boolean p_217607_1_) {
+		movementSideways = 0.0F;
+		movementForward = 0.0F;
 
-        jumping = handler.isInputForcedDown(Input.JUMP); // oppa gangnam style
+		jumping = handler.isInputForcedDown(Input.JUMP); // oppa gangnam style
 
-        if (this.pressingForward = handler.isInputForcedDown(Input.MOVE_FORWARD)) {
-            this.movementForward++;
-        }
+		if (pressingForward = handler.isInputForcedDown(Input.MOVE_FORWARD)) {
+			movementForward++;
+		}
 
-        if (this.pressingBack = handler.isInputForcedDown(Input.MOVE_BACK)) {
-            this.movementForward--;
-        }
+		if (pressingBack = handler.isInputForcedDown(Input.MOVE_BACK)) {
+			movementForward--;
+		}
 
-        if (this.pressingLeft = handler.isInputForcedDown(Input.MOVE_LEFT)) {
-            this.movementSideways++;
-        }
+		if (pressingLeft = handler.isInputForcedDown(Input.MOVE_LEFT)) {
+			movementSideways++;
+		}
 
-        if (this.pressingRight = handler.isInputForcedDown(Input.MOVE_RIGHT)) {
-            this.movementSideways--;
-        }
+		if (pressingRight = handler.isInputForcedDown(Input.MOVE_RIGHT)) {
+			movementSideways--;
+		}
 
-        if (this.sneaking = handler.isInputForcedDown(Input.SNEAK)) {
-            this.movementSideways *= 0.3D;
-            this.movementForward *= 0.3D;
-        }
-    }
+		if (sneaking = handler.isInputForcedDown(Input.SNEAK)) {
+			movementSideways *= 0.3D;
+			movementForward *= 0.3D;
+		}
+	}
 }
-

@@ -1,23 +1,17 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.api.event.events;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 
 /**
  * @author Brady
@@ -25,58 +19,58 @@ import net.minecraft.entity.Entity;
  */
 public final class RotationMoveEvent {
 
-    /**
-     * The type of event
-     */
-    private final Type type;
+	public enum Type {
 
-    /**
-     * The yaw rotation
-     */
-    private float yaw;
+		/**
+		 * Called when the player's motion is updated.
+		 *
+		 * @see Entity#moveRelative(float, float, float, float)
+		 */
+		MOTION_UPDATE,
 
-    public RotationMoveEvent(Type type, float yaw) {
-        this.type = type;
-        this.yaw = yaw;
-    }
+		/**
+		 * Called when the player jumps.
+		 *
+		 * @see LivingEntity#jump
+		 */
+		JUMP
+	}
 
-    /**
-     * Set the yaw movement rotation
-     *
-     * @param yaw Yaw rotation
-     */
-    public final void setYaw(float yaw) {
-        this.yaw = yaw;
-    }
+	/**
+	 * The type of event
+	 */
+	private final Type type;
 
-    /**
-     * @return The yaw rotation
-     */
-    public final float getYaw() {
-        return this.yaw;
-    }
+	/**
+	 * The yaw rotation
+	 */
+	private float yaw;
 
-    /**
-     * @return The type of the event
-     */
-    public final Type getType() {
-        return this.type;
-    }
+	public RotationMoveEvent(Type type, float yaw) {
+		this.type = type;
+		this.yaw = yaw;
+	}
 
-    public enum Type {
+	/**
+	 * @return The type of the event
+	 */
+	public Type getType() {
+		return type;
+	}
 
-        /**
-         * Called when the player's motion is updated.
-         *
-         * @see Entity#moveRelative(float, float, float, float)
-         */
-        MOTION_UPDATE,
+	/**
+	 * @return The yaw rotation
+	 */
+	public float getYaw() {
+		return yaw;
+	}
 
-        /**
-         * Called when the player jumps.
-         *
-         * @see LivingEntity#jump
-         */
-        JUMP
-    }
+	/**
+	 * Set the yaw movement rotation
+	 *
+	 * @param yaw Yaw rotation
+	 */
+	public void setYaw(float yaw) {
+		this.yaw = yaw;
+	}
 }

@@ -2,5 +2,5 @@ package baritone.utils.accessor;
 
 public interface IBitArray {
 
-    int[] toArray();
+	int[] toArray();
 }

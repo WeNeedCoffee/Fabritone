@@ -1,18 +1,11 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.process;
@@ -31,91 +24,88 @@ import baritone.utils.BaritoneProcessHelper;
  */
 public final class CustomGoalProcess extends BaritoneProcessHelper implements ICustomGoalProcess {
 
-    /**
-     * The current goal
-     */
-    private Goal goal;
+	protected enum State {
+		NONE, GOAL_SET, PATH_REQUESTED, EXECUTING
+	}
 
-    /**
-     * The current process state.
-     *
-     * @see State
-     */
-    private State state;
+	/**
+	 * The current goal
+	 */
+	private Goal goal;
 
-    public CustomGoalProcess(Baritone baritone) {
-        super(baritone);
-    }
+	/**
+	 * The current process state.
+	 *
+	 * @see State
+	 */
+	private State state;
 
-    @Override
-    public void setGoal(Goal goal) {
-        this.goal = goal;
-        if (this.state == State.NONE) {
-            this.state = State.GOAL_SET;
-        }
-        if (this.state == State.EXECUTING) {
-            this.state = State.PATH_REQUESTED;
-        }
-    }
+	public CustomGoalProcess(Baritone baritone) {
+		super(baritone);
+	}
 
-    @Override
-    public void path() {
-        this.state = State.PATH_REQUESTED;
-    }
+	@Override
+	public String displayName0() {
+		return "Custom Goal " + goal;
+	}
 
-    @Override
-    public Goal getGoal() {
-        return this.goal;
-    }
+	@Override
+	public Goal getGoal() {
+		return goal;
+	}
 
-    @Override
-    public boolean isActive() {
-        return this.state != State.NONE;
-    }
+	@Override
+	public boolean isActive() {
+		return state != State.NONE;
+	}
 
-    @Override
-    public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        switch (this.state) {
-            case GOAL_SET:
-                return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
-            case PATH_REQUESTED:
-                // return FORCE_REVALIDATE_GOAL_AND_PATH just once
-                PathingCommand ret = new PathingCommand(this.goal, PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
-                this.state = State.EXECUTING;
-                return ret;
-            case EXECUTING:
-                if (calcFailed) {
-                    onLostControl();
-                    return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
-                }
-                if (this.goal == null || (this.goal.isInGoal(ctx.playerFeet()) && this.goal.isInGoal(baritone.getPathingBehavior().pathStart()))) {
-                    onLostControl(); // we're there xd
-                    if (Baritone.settings().disconnectOnArrival.value) {
-                        ctx.world().disconnect();
-                    }
-                    return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
-                }
-                return new PathingCommand(this.goal, PathingCommandType.SET_GOAL_AND_PATH);
-            default:
-                throw new IllegalStateException();
-        }
-    }
+	@Override
+	public void onLostControl() {
+		state = State.NONE;
+		goal = null;
+	}
 
-    @Override
-    public void onLostControl() {
-        this.state = State.NONE;
-        this.goal = null;
-    }
+	@Override
+	public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+		switch (state) {
+			case GOAL_SET:
+				return new PathingCommand(goal, PathingCommandType.CANCEL_AND_SET_GOAL);
+			case PATH_REQUESTED:
+				// return FORCE_REVALIDATE_GOAL_AND_PATH just once
+				PathingCommand ret = new PathingCommand(goal, PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
+				state = State.EXECUTING;
+				return ret;
+			case EXECUTING:
+				if (calcFailed) {
+					onLostControl();
+					return new PathingCommand(goal, PathingCommandType.CANCEL_AND_SET_GOAL);
+				}
+				if (goal == null || goal.isInGoal(ctx.playerFeet()) && goal.isInGoal(baritone.getPathingBehavior().pathStart())) {
+					onLostControl(); // we're there xd
+					if (Baritone.settings().disconnectOnArrival.value) {
+						ctx.world().disconnect();
+					}
+					return new PathingCommand(goal, PathingCommandType.CANCEL_AND_SET_GOAL);
+				}
+				return new PathingCommand(goal, PathingCommandType.SET_GOAL_AND_PATH);
+			default:
+				throw new IllegalStateException();
+		}
+	}
 
-    @Override
-    public String displayName0() {
-        return "Custom Goal " + this.goal;
-    }
+	@Override
+	public void path() {
+		state = State.PATH_REQUESTED;
+	}
 
-    protected enum State {
-        NONE,
-        GOAL_SET,
-        PATH_REQUESTED,
-        EXECUTING
-    }
+	@Override
+	public void setGoal(Goal goal) {
+		this.goal = goal;
+		if (state == State.NONE) {
+			state = State.GOAL_SET;
+		}
+		if (state == State.EXECUTING) {
+			state = State.PATH_REQUESTED;
+		}
+	}
 }

@@ -1,18 +1,11 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.api.event.events;
@@ -27,32 +20,32 @@ import net.minecraft.network.Packet;
  */
 public final class PacketEvent {
 
-    private final ClientConnection networkManager;
+	private final ClientConnection networkManager;
 
-    private final EventState state;
+	private final EventState state;
 
-    private final Packet<?> packet;
+	private final Packet<?> packet;
 
-    public PacketEvent(ClientConnection networkManager, EventState state, Packet<?> packet) {
-        this.networkManager = networkManager;
-        this.state = state;
-        this.packet = packet;
-    }
+	public PacketEvent(ClientConnection networkManager, EventState state, Packet<?> packet) {
+		this.networkManager = networkManager;
+		this.state = state;
+		this.packet = packet;
+	}
 
-    public final ClientConnection getClientConnection() {
-        return this.networkManager;
-    }
+	@SuppressWarnings("unchecked")
+	public <T extends Packet<?>> T cast() {
+		return (T) packet;
+	}
 
-    public final EventState getState() {
-        return this.state;
-    }
+	public ClientConnection getClientConnection() {
+		return networkManager;
+	}
 
-    public final Packet<?> getPacket() {
-        return this.packet;
-    }
+	public Packet<?> getPacket() {
+		return packet;
+	}
 
-    @SuppressWarnings("unchecked")
-    public final <T extends Packet<?>> T cast() {
-        return (T) this.packet;
-    }
+	public EventState getState() {
+		return state;
+	}
 }

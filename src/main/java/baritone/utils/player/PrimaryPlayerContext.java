@@ -1,18 +1,11 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.utils.player;
@@ -35,30 +28,30 @@ import net.minecraft.world.World;
  */
 public enum PrimaryPlayerContext implements IPlayerContext, Helper {
 
-    INSTANCE;
+	INSTANCE;
 
-    @Override
-    public ClientPlayerEntity player() {
-        return mc.player;
-    }
+	@Override
+	public HitResult objectMouseOver() {
+		return RayTraceUtils.rayTraceTowards(player(), playerRotations(), playerController().getBlockReachDistance());
+	}
 
-    @Override
-    public IPlayerController playerController() {
-        return PrimaryPlayerController.INSTANCE;
-    }
+	@Override
+	public ClientPlayerEntity player() {
+		return mc.player;
+	}
 
-    @Override
-    public World world() {
-        return mc.world;
-    }
+	@Override
+	public IPlayerController playerController() {
+		return PrimaryPlayerController.INSTANCE;
+	}
 
-    @Override
-    public IWorldData worldData() {
-        return BaritoneAPI.getProvider().getPrimaryBaritone().getWorldProvider().getCurrentWorld();
-    }
+	@Override
+	public World world() {
+		return mc.world;
+	}
 
-    @Override
-    public HitResult objectMouseOver() {
-        return RayTraceUtils.rayTraceTowards(player(), playerRotations(), playerController().getBlockReachDistance());
-    }
+	@Override
+	public IWorldData worldData() {
+		return BaritoneAPI.getProvider().getPrimaryBaritone().getWorldProvider().getCurrentWorld();
+	}
 }

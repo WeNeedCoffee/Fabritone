@@ -1,18 +1,11 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.utils.type;
@@ -26,70 +19,71 @@ import it.unimi.dsi.fastutil.bytes.ByteList;
  */
 public final class VarInt {
 
-    private final int value;
-    private final byte[] serialized;
-    private final int size;
+	public static VarInt read(byte[] bytes) {
+		return read(bytes, 0);
+	}
 
-    public VarInt(int value) {
-        this.value = value;
-        this.serialized = serialize0(this.value);
-        this.size = this.serialized.length;
-    }
+	public static VarInt read(byte[] bytes, int start) {
+		int value = 0;
+		int size = 0;
+		int index = start;
 
-    /**
-     * @return The integer value that is represented by this {@link VarInt}.
-     */
-    public final int getValue() {
-        return this.value;
-    }
+		while (true) {
+			byte b = bytes[index++];
+			value |= (b & 0x7F) << size++ * 7;
 
-    /**
-     * @return The size of this {@link VarInt}, in bytes, once serialized.
-     */
-    public final int getSize() {
-        return this.size;
-    }
+			if (size > 5)
+				throw new IllegalArgumentException("VarInt size cannot exceed 5 bytes");
 
-    public final byte[] serialize() {
-        return this.serialized;
-    }
+			// Most significant bit denotes another byte is to be read.
+			if ((b & 0x80) == 0) {
+				break;
+			}
+		}
 
-    private static byte[] serialize0(int valueIn) {
-        ByteList bytes = new ByteArrayList();
+		return new VarInt(value);
+	}
 
-        int value = valueIn;
-        while ((value & 0x80) != 0) {
-            bytes.add((byte) (value & 0x7F | 0x80));
-            value >>>= 7;
-        }
-        bytes.add((byte) (value & 0xFF));
+	private static byte[] serialize0(int valueIn) {
+		ByteList bytes = new ByteArrayList();
 
-        return bytes.toByteArray();
-    }
+		int value = valueIn;
+		while ((value & 0x80) != 0) {
+			bytes.add((byte) (value & 0x7F | 0x80));
+			value >>>= 7;
+		}
+		bytes.add((byte) (value & 0xFF));
 
-    public static VarInt read(byte[] bytes) {
-        return read(bytes, 0);
-    }
+		return bytes.toByteArray();
+	}
 
-    public static VarInt read(byte[] bytes, int start) {
-        int value = 0;
-        int size = 0;
-        int index = start;
+	private final int value;
 
-        while (true) {
-            byte b = bytes[index++];
-            value |= (b & 0x7F) << size++ * 7;
+	private final byte[] serialized;
 
-            if (size > 5) {
-                throw new IllegalArgumentException("VarInt size cannot exceed 5 bytes");
-            }
+	private final int size;
 
-            // Most significant bit denotes another byte is to be read.
-            if ((b & 0x80) == 0) {
-                break;
-            }
-        }
+	public VarInt(int value) {
+		this.value = value;
+		serialized = serialize0(this.value);
+		size = serialized.length;
+	}
 
-        return new VarInt(value);
-    }
+	/**
+	 * @return The size of this {@link VarInt}, in bytes, once serialized.
+	 */
+	public int getSize() {
+		return size;
+	}
+
+	/**
+	 * @return The integer value that is represented by this {@link VarInt}.
+	 */
+	public int getValue() {
+		return value;
+	}
+
+	public byte[] serialize() {
+		return serialized;
+	}
 }

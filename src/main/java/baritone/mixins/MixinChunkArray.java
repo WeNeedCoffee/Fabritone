@@ -1,102 +1,93 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.mixins;
 
-import baritone.utils.accessor.IChunkArray;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.WorldChunk;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import baritone.utils.accessor.IChunkArray;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.WorldChunk;
 
 @Mixin(targets = "net.minecraft.client.world.ClientChunkManager$ClientChunkMap")
 public abstract class MixinChunkArray implements IChunkArray {
 
-    @Final
-    @Shadow
-    private AtomicReferenceArray<WorldChunk> chunks;
+	@Final
+	@Shadow
+	private AtomicReferenceArray<WorldChunk> chunks;
 
-    @Final
-    @Shadow
-    private int radius;
+	@Final
+	@Shadow
+	private int radius;
 
-    @Final
-    @Shadow
-    private int diameter;
+	@Final
+	@Shadow
+	private int diameter;
 
-    @Shadow
-    private int centerChunkX;
+	@Shadow
+	private int centerChunkX;
 
-    @Shadow
-    private int centerChunkZ;
+	@Shadow
+	private int centerChunkZ;
 
-    @Shadow
-    private int loadedChunkCount;
+	@Shadow
+	private int loadedChunkCount;
 
-    @Shadow
-    protected abstract boolean isInRadius(int x, int z);
+	@Override
+	public int centerX() {
+		return centerChunkX;
+	}
 
-    @Shadow
-    protected abstract int getIndex(int x, int z);
+	@Override
+	public int centerZ() {
+		return centerChunkZ;
+	}
 
-    @Shadow
-    protected abstract void set(int index, WorldChunk chunk);
+	@Override
+	public void copyFrom(IChunkArray other) {
+		centerChunkX = other.centerX();
+		centerChunkZ = other.centerZ();
 
-    @Override
-    public int centerX() {
-        return centerChunkX;
-    }
+		AtomicReferenceArray<WorldChunk> copyingFrom = other.getChunks();
+		for (int k = 0; k < copyingFrom.length(); ++k) {
+			WorldChunk chunk = copyingFrom.get(k);
+			if (chunk != null) {
+				ChunkPos chunkpos = chunk.getPos();
+				if (isInRadius(chunkpos.x, chunkpos.z)) {
+					int index = getIndex(chunkpos.x, chunkpos.z);
+					if (chunks.get(index) != null)
+						throw new IllegalStateException("Doing this would mutate the client's REAL loaded chunks?!");
+					set(index, chunk);
+				}
+			}
+		}
+	}
 
-    @Override
-    public int centerZ() {
-        return centerChunkZ;
-    }
+	@Override
+	public AtomicReferenceArray<WorldChunk> getChunks() {
+		return chunks;
+	}
 
-    @Override
-    public int viewDistance() {
-        return radius;
-    }
+	@Shadow
+	protected abstract int getIndex(int x, int z);
 
-    @Override
-    public AtomicReferenceArray<WorldChunk> getChunks() {
-        return chunks;
-    }
+	@Shadow
+	protected abstract boolean isInRadius(int x, int z);
 
-    @Override
-    public void copyFrom(IChunkArray other) {
-        centerChunkX = other.centerX();
-        centerChunkZ = other.centerZ();
+	@Shadow
+	protected abstract void set(int index, WorldChunk chunk);
 
-        AtomicReferenceArray<WorldChunk> copyingFrom = other.getChunks();
-        for (int k = 0; k < copyingFrom.length(); ++k) {
-            WorldChunk chunk = copyingFrom.get(k);
-            if (chunk != null) {
-                ChunkPos chunkpos = chunk.getPos();
-                if (isInRadius(chunkpos.x, chunkpos.z)) {
-                    int index = getIndex(chunkpos.x, chunkpos.z);
-                    if (chunks.get(index) != null) {
-                        throw new IllegalStateException("Doing this would mutate the client's REAL loaded chunks?!");
-                    }
-                    set(index, chunk);
-                }
-            }
-        }
-    }
+	@Override
+	public int viewDistance() {
+		return radius;
+	}
 }

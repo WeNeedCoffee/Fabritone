@@ -1,22 +1,18 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.process;
 
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import baritone.Baritone;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalComposite;
@@ -29,10 +25,6 @@ import baritone.utils.BaritoneProcessHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 /**
  * Follow an entity
  *
@@ -40,85 +32,76 @@ import java.util.stream.Collectors;
  */
 public final class FollowProcess extends BaritoneProcessHelper implements IFollowProcess {
 
-    private Predicate<Entity> filter;
-    private List<Entity> cache;
+	private Predicate<Entity> filter;
+	private List<Entity> cache;
 
-    public FollowProcess(Baritone baritone) {
-        super(baritone);
-    }
+	public FollowProcess(Baritone baritone) {
+		super(baritone);
+	}
 
-    @Override
-    public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        scanWorld();
-        Goal goal = new GoalComposite(cache.stream().map(this::towards).toArray(Goal[]::new));
-        return new PathingCommand(goal, PathingCommandType.REVALIDATE_GOAL_AND_PATH);
-    }
+	@Override
+	public Predicate<Entity> currentFilter() {
+		return filter;
+	}
 
-    private Goal towards(Entity following) {
-        BlockPos pos;
-        if (Baritone.settings().followOffsetDistance.value == 0) {
-            pos = new BlockPos(following);
-        } else {
-            GoalXZ g = GoalXZ.fromDirection(following.getPosVector(), Baritone.settings().followOffsetDirection.value, Baritone.settings().followOffsetDistance.value);
-            pos = new BlockPos(g.getX(), following.getY(), g.getZ());
-        }
-        return new GoalNear(pos, Baritone.settings().followRadius.value);
-    }
+	@Override
+	public String displayName0() {
+		return "Following " + cache;
+	}
 
+	@Override
+	public void follow(Predicate<Entity> filter) {
+		this.filter = filter;
+	}
 
-    private boolean followable(Entity entity) {
-        if (entity == null) {
-            return false;
-        }
-        if (!entity.isAlive()) {
-            return false;
-        }
-        if (entity.equals(ctx.player())) {
-            return false;
-        }
-        return ctx.entitiesStream().anyMatch(entity::equals);
-    }
+	private boolean followable(Entity entity) {
+		if (entity == null)
+			return false;
+		if (!entity.isAlive())
+			return false;
+		if (entity.equals(ctx.player()))
+			return false;
+		return ctx.entitiesStream().anyMatch(entity::equals);
+	}
 
-    private void scanWorld() {
-        cache = ctx.entitiesStream()
-                .filter(this::followable)
-                .filter(this.filter)
-                .distinct()
-                .collect(Collectors.toList());
-    }
+	@Override
+	public List<Entity> following() {
+		return cache;
+	}
 
-    @Override
-    public boolean isActive() {
-        if (filter == null) {
-            return false;
-        }
-        scanWorld();
-        return !cache.isEmpty();
-    }
+	@Override
+	public boolean isActive() {
+		if (filter == null)
+			return false;
+		scanWorld();
+		return !cache.isEmpty();
+	}
 
-    @Override
-    public void onLostControl() {
-        filter = null;
-        cache = null;
-    }
+	@Override
+	public void onLostControl() {
+		filter = null;
+		cache = null;
+	}
 
-    @Override
-    public String displayName0() {
-        return "Following " + cache;
-    }
+	@Override
+	public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+		scanWorld();
+		Goal goal = new GoalComposite(cache.stream().map(this::towards).toArray(Goal[]::new));
+		return new PathingCommand(goal, PathingCommandType.REVALIDATE_GOAL_AND_PATH);
+	}
 
-    @Override
-    public void follow(Predicate<Entity> filter) {
-        this.filter = filter;
-    }
+	private void scanWorld() {
+		cache = ctx.entitiesStream().filter(this::followable).filter(filter).distinct().collect(Collectors.toList());
+	}
 
-    @Override
-    public List<Entity> following() {
-        return cache;
-    }
-
-    @Override
-    public Predicate<Entity> currentFilter() {
-        return filter;
-    }
+	private Goal towards(Entity following) {
+		BlockPos pos;
+		if (Baritone.settings().followOffsetDistance.value == 0) {
+			pos = new BlockPos(following);
+		} else {
+			GoalXZ g = GoalXZ.fromDirection(following.getPosVector(), Baritone.settings().followOffsetDirection.value, Baritone.settings().followOffsetDistance.value);
+			pos = new BlockPos(g.getX(), following.getY(), g.getZ());
+		}
+		return new GoalNear(pos, Baritone.settings().followRadius.value);
+	}
 }

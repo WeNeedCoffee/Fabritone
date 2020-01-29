@@ -1,22 +1,17 @@
 /*
  * This file is part of Baritone.
  *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Baritone is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Baritone is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License along with Baritone. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package baritone.utils;
 
+import java.util.HashMap;
+import java.util.Map;
 import baritone.Baritone;
 import baritone.api.BaritoneAPI;
 import baritone.api.event.events.TickEvent;
@@ -26,93 +21,87 @@ import baritone.behavior.Behavior;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * An interface with the game's control system allowing the ability to
- * force down certain controls, having the same effect as if we were actually
- * physically forcing down the assigned key.
+ * An interface with the game's control system allowing the ability to force down certain controls, having the same effect as if we were actually physically forcing down the assigned key.
  *
  * @author Brady
  * @since 7/31/2018
  */
 public final class InputOverrideHandler extends Behavior implements IInputOverrideHandler {
 
-    /**
-     * Maps inputs to whether or not we are forcing their state down.
-     */
-    private final Map<Input, Boolean> inputForceStateMap = new HashMap<>();
+	/**
+	 * Maps inputs to whether or not we are forcing their state down.
+	 */
+	private final Map<Input, Boolean> inputForceStateMap = new HashMap<>();
 
-    private final BlockBreakHelper blockBreakHelper;
-    private final BlockPlaceHelper blockPlaceHelper;
+	private final BlockBreakHelper blockBreakHelper;
+	private final BlockPlaceHelper blockPlaceHelper;
 
-    public InputOverrideHandler(Baritone baritone) {
-        super(baritone);
-        this.blockBreakHelper = new BlockBreakHelper(baritone.getPlayerContext());
-        this.blockPlaceHelper = new BlockPlaceHelper(baritone.getPlayerContext());
-    }
+	public InputOverrideHandler(Baritone baritone) {
+		super(baritone);
+		blockBreakHelper = new BlockBreakHelper(baritone.getPlayerContext());
+		blockPlaceHelper = new BlockPlaceHelper(baritone.getPlayerContext());
+	}
 
-    /**
-     * Returns whether or not we are forcing down the specified {@link Input}.
-     *
-     * @param input The input
-     * @return Whether or not it is being forced down
-     */
-    @Override
-    public final boolean isInputForcedDown(Input input) {
-        return input == null ? false : this.inputForceStateMap.getOrDefault(input, false);
-    }
+	/**
+	 * Clears the override state for all keys
+	 */
+	@Override
+	public void clearAllKeys() {
+		inputForceStateMap.clear();
+	}
 
-    /**
-     * Sets whether or not the specified {@link Input} is being forced down.
-     *
-     * @param input  The {@link Input}
-     * @param forced Whether or not the state is being forced
-     */
-    @Override
-    public final void setInputForceState(Input input, boolean forced) {
-        this.inputForceStateMap.put(input, forced);
-    }
+	public BlockBreakHelper getBlockBreakHelper() {
+		return blockBreakHelper;
+	}
 
-    /**
-     * Clears the override state for all keys
-     */
-    @Override
-    public final void clearAllKeys() {
-        this.inputForceStateMap.clear();
-    }
+	private boolean inControl() {
+		// if we are not primary (a bot) we should set the movementinput even when idle (not pathing)
+		return baritone.getPathingBehavior().isPathing() || baritone != BaritoneAPI.getProvider().getPrimaryBaritone();
+	}
 
-    @Override
-    public final void onTick(TickEvent event) {
-        if (event.getType() == TickEvent.Type.OUT) {
-            return;
-        }
-        if (isInputForcedDown(Input.CLICK_LEFT)) {
-            setInputForceState(Input.CLICK_RIGHT, false);
-        }
-        blockBreakHelper.tick(isInputForcedDown(Input.CLICK_LEFT));
-        blockPlaceHelper.tick(isInputForcedDown(Input.CLICK_RIGHT));
+	/**
+	 * Returns whether or not we are forcing down the specified {@link Input}.
+	 *
+	 * @param input The input
+	 * @return Whether or not it is being forced down
+	 */
+	@Override
+	public boolean isInputForcedDown(Input input) {
+		return input == null ? false : inputForceStateMap.getOrDefault(input, false);
+	}
 
-        if (inControl()) {
-            if (ctx.player().input.getClass() != PlayerMovementInput.class) {
-                ctx.player().input = new PlayerMovementInput(this);
-            }
-        } else {
-            if (ctx.player().input.getClass() == PlayerMovementInput.class) { // allow other movement inputs that aren't this one, e.g. for a freecam
-                ctx.player().input = new KeyboardInput(MinecraftClient.getInstance().options);
-            }
-        }
-        // only set it if it was previously incorrect
-        // gotta do it this way, or else it constantly thinks you're beginning a double tap W sprint lol
-    }
+	@Override
+	public void onTick(TickEvent event) {
+		if (event.getType() == TickEvent.Type.OUT)
+			return;
+		if (isInputForcedDown(Input.CLICK_LEFT)) {
+			setInputForceState(Input.CLICK_RIGHT, false);
+		}
+		blockBreakHelper.tick(isInputForcedDown(Input.CLICK_LEFT));
+		blockPlaceHelper.tick(isInputForcedDown(Input.CLICK_RIGHT));
 
-    private boolean inControl() {
-        // if we are not primary (a bot) we should set the movementinput even when idle (not pathing)
-        return baritone.getPathingBehavior().isPathing() || baritone != BaritoneAPI.getProvider().getPrimaryBaritone();
-    }
+		if (inControl()) {
+			if (ctx.player().input.getClass() != PlayerMovementInput.class) {
+				ctx.player().input = new PlayerMovementInput(this);
+			}
+		} else {
+			if (ctx.player().input.getClass() == PlayerMovementInput.class) { // allow other movement inputs that aren't this one, e.g. for a freecam
+				ctx.player().input = new KeyboardInput(MinecraftClient.getInstance().options);
+			}
+		}
+		// only set it if it was previously incorrect
+		// gotta do it this way, or else it constantly thinks you're beginning a double tap W sprint lol
+	}
 
-    public BlockBreakHelper getBlockBreakHelper() {
-        return blockBreakHelper;
-    }
+	/**
+	 * Sets whether or not the specified {@link Input} is being forced down.
+	 *
+	 * @param input  The {@link Input}
+	 * @param forced Whether or not the state is being forced
+	 */
+	@Override
+	public void setInputForceState(Input input, boolean forced) {
+		inputForceStateMap.put(input, forced);
+	}
 }
