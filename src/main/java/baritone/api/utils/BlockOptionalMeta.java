@@ -283,8 +283,12 @@ public final class BlockOptionalMeta {
     }
 
     public boolean matches(BlockState blockstate) {
-        Block block = blockstate.getBlock();
-        return block == this.block && stateHashes.contains(blockstate.hashCode());
+    	try {
+    		Block block = blockstate.getBlock();
+        	return block == this.block && stateHashes.contains(blockstate.hashCode());
+    	} catch (Exception e) {
+    		return false;
+    	}
     }
 
     public boolean matches(ItemStack stack) {

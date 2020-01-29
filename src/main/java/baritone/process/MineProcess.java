@@ -28,6 +28,7 @@ import baritone.cache.CachedChunk;
 import baritone.cache.WorldScanner;
 import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.MovementHelper;
+import baritone.selection.SelectionManager;
 import baritone.utils.BaritoneProcessHelper;
 import baritone.utils.BlockStateInterface;
 import net.minecraft.block.*;
@@ -36,7 +37,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.util.math.Vec3d;
+import net.wurstclient.WurstClient;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -359,7 +361,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         knownOreLocations.addAll(dropped);
         BlockPos playerFeet = ctx.playerFeet();
         BlockStateInterface bsi = new BlockStateInterface(ctx);
-        int searchDist = 10;
+        int searchDist = WurstClient.MC.options.viewDistance * 16;
         double fakedBlockReachDistance = 20; // at least 10 * sqrt(3) with some extra space to account for positioning within the block
         for (int x = playerFeet.getX() - searchDist; x <= playerFeet.getX() + searchDist; x++) {
             for (int y = playerFeet.getY() - searchDist; y <= playerFeet.getY() + searchDist; y++) {
@@ -398,6 +400,8 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
                 .filter(pos -> MineProcess.plausibleToBreak(ctx, pos))
 
                 .filter(pos -> !blacklist.contains(pos))
+                
+                .filter(pos -> ctx.baritone.getSelectionManager().getOnlySelection() != null ? ctx.baritone.getSelectionManager().getOnlySelection().aabb().contains(new Vec3d(pos.getX(), pos.getY(), pos.getZ())) : true)
 
                 .sorted(Comparator.comparingDouble(new BlockPos(ctx.getBaritone().getPlayerContext().player())::getSquaredDistance))
                 .collect(Collectors.toList());
