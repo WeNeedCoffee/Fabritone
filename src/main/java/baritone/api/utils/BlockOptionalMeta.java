@@ -349,12 +349,16 @@ public final class BlockOptionalMeta {
 	}
 
 	public boolean matches(ItemStack stack) {
-		//noinspection ConstantConditions
-		int hash = ((IItemStack) (Object) stack).getBaritoneHash();
+		try {
+			//noinspection ConstantConditions
+			int hash = ((IItemStack) (Object) stack).getBaritoneHash();
 
-		hash -= stack.getDamage();
+			hash -= stack.getDamage();
 
-		return stackHashes.contains(hash);
+			return stackHashes.contains(hash);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	@Override

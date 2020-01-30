@@ -187,6 +187,11 @@ public final class BRotationUtils {
 		}
 		return Optional.empty();
 	}
+	
+	public static Rotation reachableOffsetB(Entity entity, BlockPos pos) {
+		return calcRotationFromVec3d(entity.getCameraPosVec(1.0F), VecUtils.calculateBlockCenter(entity.world, pos), new Rotation(entity.yaw, entity.pitch));		
+	}
+	
 
 	/**
 	 * Wraps the target angles to a relative value from the current angles. This is done by subtracting the current from the target, normalizing it, and then adding the current angles back to it.
