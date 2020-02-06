@@ -65,6 +65,16 @@ public interface IWaypoint {
          * Tag indicating a position explictly marked as a home base
          */
         HOME("home", "base"),
+        
+        /**
+         * Tag indicating a position explictly marked as a chest
+         */
+        CHEST("chest"),
+
+        /**
+         * Tag indicating a position explictly marked to use a chest
+         */
+        USECHEST("usechest"),
 
         /**
          * Tag indicating a position that the local player has died at

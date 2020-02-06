@@ -28,6 +28,7 @@ public final class DefaultCommands {
 		commands.add(prc.resumeCommand);
 		commands.add(prc.pausedCommand);
 		commands.add(prc.cancelCommand);
+		commands.add(prc.setChestCommand);
 		return Collections.unmodifiableList(commands);
 	}
 

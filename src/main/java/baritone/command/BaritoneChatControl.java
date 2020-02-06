@@ -44,8 +44,9 @@ public class BaritoneChatControl implements Helper, AbstractGameEventListener {
 
 	private static final Settings settings = BaritoneAPI.getSettings();
 	private final ICommandManager manager;
-
+	public static BaritoneChatControl INSTANCE;
 	public BaritoneChatControl(IBaritone baritone) {
+		INSTANCE = this;
 		manager = baritone.getCommandManager();
 		baritone.getGameEventHandler().registerEventListener(this);
 	}

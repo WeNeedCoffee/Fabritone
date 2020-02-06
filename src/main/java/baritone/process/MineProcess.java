@@ -15,9 +15,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 import baritone.Baritone;
 import baritone.api.pathing.goals.Goal;
@@ -34,7 +37,6 @@ import baritone.api.utils.BlockOptionalMeta;
 import baritone.api.utils.BlockOptionalMetaLookup;
 import baritone.api.utils.BlockUtils;
 import baritone.api.utils.Rotation;
-import baritone.api.utils.VecUtils;
 import baritone.api.utils.input.Input;
 import baritone.cache.CachedChunk;
 import baritone.cache.WorldScanner;
@@ -46,27 +48,18 @@ import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
 import net.minecraft.block.FallingBlock;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.container.PlayerContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.packet.HandSwingC2SPacket;
-import net.minecraft.server.network.packet.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContext.Builder;
+import net.minecraft.loot.context.LootContextType;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.RayTraceContext;
 import net.wurstclient.WurstClient;
-import net.wurstclient.util.RotationUtils;
 
 /**
  * Mine blocks of a certain type
@@ -159,6 +152,8 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 	}
 
 	private BlockOptionalMetaLookup filter;
+	private Set<Item> validDrops;
+	private BlockOptionalMetaLookup blacklistBlocks;
 	private List<BlockPos> knownOreLocations;
 	private List<BlockPos> blacklist; // inaccessible
 	private Map<BlockPos, Long> anticipatedDrops;
@@ -170,6 +165,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 	private int desiredQuantity;
 
 	private int tickCount;
+	private boolean usingChest = false;
 
 	public MineProcess(Baritone baritone) {
 		super(baritone);
@@ -249,7 +245,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 		for (Entity entity : ((ClientWorld) ctx.world()).getEntities()) {
 			if (entity instanceof ItemEntity) {
 				ItemEntity ei = (ItemEntity) entity;
-				if (filter.has(ei.getStack())) {
+				if (filter.has(ei.getStack()) && !blacklistBlocks.has(ei.getStack())) {
 					ret.add(new BlockPos(entity));
 				}
 			}
@@ -275,6 +271,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
 	@Override
 	public void mine(int quantity, BlockOptionalMetaLookup filter) {
+		usingChest = false;
 		this.filter = filter;
 		if (filter != null && !Baritone.settings().allowBreak.value) {
 			logDirect("Unable to mine when allowBreak is false!");
@@ -287,7 +284,24 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 		branchPoint = null;
 		branchPointRunaway = null;
 		anticipatedDrops = new HashMap<>();
+		validDrops = new HashSet<>();
+		blacklistBlocks = new BlockOptionalMetaLookup();
 		if (filter != null) {
+			for (BlockOptionalMeta bom : filter.blocks()) {
+				Block block = bom.getBlock();
+				try { 
+
+					Builder b = new LootContext.Builder(WurstClient.getServerWorld());
+					Item item = block.getDroppedStacks(block.getDefaultState(), b).get(0).getItem();//getItemDropped(, new Random(), 0);
+
+					this.validDrops.add(item);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				Item ore = Item.fromBlock(block);
+
+				this.validDrops.add(ore);
+			}
 			rescan(new ArrayList<>(), new CalculationContext(baritone));
 		}
 	}
@@ -302,72 +316,39 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 		mine(0, (BlockOptionalMetaLookup) null);
 	}
 
-	boolean a = false;
-	int b = 0;
-	BlockPos chest = null;
-	boolean d = false;
 	@Override
 	public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-		if (a) {
-			b++;
-			if (b > 10) {
-				WurstClient.IMC.rightClick();
-				WurstClient.MC.player.swingHand(Hand.MAIN_HAND);
-				a = false;
-				b = 0;
-				d = true;
-			}
-			return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
-		}
-		if (WurstClient.INSTANCE.getHax().autoStoreHack.forced) {
-			return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
-		} else {
-			a = false;
-			if (d) {
-				if (WurstClient.MC.currentScreen != null) WurstClient.MC.currentScreen.onClose();
-				d = false;
-			}
-		}
-		int haschest = -1;
-		for (int i = 0; i < 9; i++) {
-			if (WurstClient.MC.player.inventory.getInvStack(i).getItem().equals(Items.CHEST)) {
-				haschest = i;
-				break;
-			}
-		}
-		boolean full = true;
-		if (haschest >= 0)
-			for (int i = 9; i < 36; i++) {
-				if (WurstClient.MC.player.inventory.getInvStack(i).isEmpty()) {
-					full = false;
-					break;
+		if (Baritone.settings().checkInventory.value) {
+			boolean invFull = isInventoryFull();
+			blacklistBlocks = new BlockOptionalMetaLookup();
+
+			PathingCommand result = null;
+
+			if (invFull) {
+				Set<ItemStack> notFullStacks = notFullStacks(validDrops);
+				blacklistBlocks = getBlacklistBlocks(notFullStacks, filter);
+
+				if (notFullStacks.isEmpty()) {
+					result = gotoChest(isSafeToCancel);
+
+					usingChest = result.commandType == PathingCommandType.REQUEST_PAUSE;
 				}
 			}
-		if (haschest >= 0)
-			if (full && !a) {
-				int reach = 3;
-				int x = WurstClient.MC.player.getBlockPos().getX();
-				int y = WurstClient.MC.player.getBlockPos().getY();
-				int z = WurstClient.MC.player.getBlockPos().getZ();
-				for (int xx = -reach; xx <= reach; xx++) {
-					for (int yy = -reach; yy <= reach; yy++) {
-						for (int zz = -reach; zz <= reach; zz++) {
-							BlockPos pos = new BlockPos(xx + x, yy + y, zz + z);
-							if (WurstClient.MC.world.getBlockState(new BlockPos(xx + x, yy + y + 1, zz + z)).isAir()) {
-								WurstClient.MC.player.inventory.selectedSlot = haschest;
-								if (tryToPlace(pos, Math.pow(4.25, 2))) {
-									System.out.println(pos.toShortString());
-									a = true;
-									WurstClient.INSTANCE.getHax().autoStoreHack.setEnabled(true);
-									WurstClient.INSTANCE.getHax().autoStoreHack.forced = true;
-									
-									return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
-								}
-							}
-						}
+			if (usingChest && putInventoryInChest(validDrops)) {
+				ctx.player().closeScreen();
+				if (invFull) {
+					if (Baritone.settings().goHome.value) {
+						returnhome();
 					}
+					cancel();
+					logDirect("Inventory and chest are full; no more mining.");
 				}
+				usingChest = false;
 			}
+
+			if (result != null)
+				return result;
+		}
 		if (desiredQuantity > 0) {
 			int curr = ctx.player().inventory.main.stream().filter(stack -> filter.has(stack)).mapToInt(ItemStack::getCount).sum();
 			System.out.println("Currently have " + curr + " valid items");
@@ -384,6 +365,9 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 				knownOreLocations.removeIf(blacklist::contains);
 			} else {
 				logDirect("Unable to find any path to " + filter + ", canceling mine");
+				if (Baritone.settings().goHome.value) {
+					returnhome();
+				}
 				cancel();
 				return null;
 			}
@@ -403,7 +387,6 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 		if (Baritone.settings().legitMine.value) {
 			addNearby();
 		}
-
 		Optional<BlockPos> shaft = curr.stream().filter(pos -> pos.getX() == ctx.playerFeet().getX() && pos.getZ() == ctx.playerFeet().getZ()).filter(pos -> pos.getY() >= ctx.playerFeet().getY()).filter(pos -> !(BlockStateInterface.get(ctx, pos).getBlock() instanceof AirBlock)) // after breaking a block, it takes mineGoalUpdateInterval ticks for it to actually update this list =(
 				.min(Comparator.comparingDouble(ctx.playerFeet()::getSquaredDistance));
 		baritone.getInputOverrideHandler().clearAllKeys();
@@ -426,150 +409,13 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 		if (command == null) {
 			// none in range
 			// maybe say something in chat? (ahem impact)
+			if (Baritone.settings().goHome.value) {
+				returnhome();
+			}
 			cancel();
 			return null;
 		}
 		return command;
-	}
-
-	private boolean faceVectorClient(Vec3d vec) {
-		net.wurstclient.util.RotationUtils.Rotation rotation = RotationUtils.getNeededRotations(vec);
-
-		float oldYaw = WurstClient.MC.player.prevYaw;
-		float oldPitch = WurstClient.MC.player.prevPitch;
-
-		WurstClient.MC.player.yaw = limitAngleChange(oldYaw, rotation.getYaw(), 30);
-		WurstClient.MC.player.pitch = rotation.getPitch();
-
-		return Math.abs(oldYaw - rotation.getYaw()) + Math.abs(oldPitch - rotation.getPitch()) < 1F;
-	}
-
-	private float limitAngleChange(float current, float intended, float maxChange) {
-		float change = MathHelper.wrapDegrees(intended - current);
-		change = MathHelper.clamp(change, -maxChange, maxChange);
-		return MathHelper.wrapDegrees(current + change);
-	}
-
-	boolean c = false;
-
-	private boolean tryToClick(BlockPos pos) {
-		// face block
-		//faceVectorClient(VecUtils.calculateBlockCenter(WurstClient.MC.world, pos));
-		//WurstClient.IMC.rightClick();
-		// place block
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-		net.wurstclient.util.RotationUtils.Rotation place = RotationUtils.getNeededRotations(posVec.add(new Vec3d(Direction.NORTH.getVector()).multiply(0.5)));
-		baritone.getLookBehavior().updateTarget(new Rotation(place.getYaw(), place.getPitch()), true);
-		WurstClient.IMC.rightClick();
-		WurstClient.MC.player.swingHand(Hand.MAIN_HAND);
-		System.out.println("bbb");
-		return true;
-
-	}
-
-	private void placeBlockSimple(BlockPos pos) {
-		Direction side = null;
-		Direction[] sides = Direction.values();
-
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
-
-		Vec3d[] hitVecs = new Vec3d[sides.length];
-		for (int i = 0; i < sides.length; i++) {
-			hitVecs[i] = posVec.add(new Vec3d(sides[i].getVector()).multiply(0.5));
-		}
-
-		if (side == null) {
-			for (int i = 0; i < sides.length; i++) {
-				// check if neighbor can be right clicked
-				if (!net.wurstclient.util.BlockUtils.canBeClicked(pos)) {
-					continue;
-				}
-
-				// check if side is facing away from player
-				if (distanceSqPosVec > eyesPos.squaredDistanceTo(hitVecs[i])) {
-					continue;
-				}
-
-				side = sides[i];
-				break;
-			}
-		}
-
-		if (side == null)
-			return;
-
-		Vec3d hitVec = hitVecs[side.ordinal()];
-
-		// face block
-		WurstClient.INSTANCE.getRotationFaker().faceVectorPacket(hitVec);
-		if (RotationUtils.getAngleToLastReportedLookVec(hitVec) > 1)
-			return;
-
-		// check timer
-		if (WurstClient.IMC.getItemUseCooldown() > 0)
-			return;
-
-		// place block
-		WurstClient.IMC.getInteractionManager().rightClickBlock(pos.offset(side), side.getOpposite(), hitVec);
-
-		// swing arm
-		WurstClient.MC.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-
-		// reset timer
-		WurstClient.IMC.setItemUseCooldown(4);
-	}
-
-	private boolean tryToPlace(BlockPos pos, double rangeSq) {
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
-
-		if (WurstClient.MC.world.getCollisions(null, new Box(pos, pos), null).count() > 0) {
-			return false;
-		}
-		for (Direction side : Direction.values()) {
-			BlockPos neighbor = pos.offset(side);
-			if (net.wurstclient.util.BlockUtils.getState(neighbor).getBlock() instanceof ChestBlock) {
-				return false;
-			}
-		}
-		for (Direction side : Direction.values()) {
-			BlockPos neighbor = pos.offset(side);
-
-			// check if neighbor can be right clicked
-			if (!net.wurstclient.util.BlockUtils.canBeClicked(neighbor) || net.wurstclient.util.BlockUtils.getState(neighbor).getMaterial().isReplaceable()) {
-				continue;
-			}
-
-			Vec3d dirVec = new Vec3d(side.getVector());
-			Vec3d hitVec = posVec.add(dirVec.multiply(0.5));
-
-			// check if hitVec is within range
-			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
-				continue;
-			}
-
-			// check if side is visible (facing away from player)
-			if (distanceSqPosVec > eyesPos.squaredDistanceTo(posVec.add(dirVec))) {
-				continue;
-			}
-
-			if (WurstClient.MC.world.rayTrace(new RayTraceContext(eyesPos, hitVec, RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, WurstClient.MC.player)).getType() != HitResult.Type.MISS) {
-				continue;
-			}
-			// face block
-			net.wurstclient.util.RotationUtils.Rotation rot = RotationUtils.getNeededRotations(hitVec);
-			baritone.getLookBehavior().updateTarget(new Rotation(rot.getYaw(), rot.getPitch()), true);
-			//WurstClient.IMC.rightClick();
-			// place block
-			WurstClient.IMC.getInteractionManager().rightClickBlock(neighbor, side.getOpposite(), hitVec);
-			//WurstClient.MC.player.swingHand(Hand.MAIN_HAND);
-			return true;
-		}
-
-		return false;
 	}
 
 	private void rescan(List<BlockPos> already, CalculationContext context) {
@@ -582,6 +428,9 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 		locs.addAll(dropped);
 		if (locs.isEmpty()) {
 			logDirect("No locations for " + filter + " known, cancelling");
+			if (Baritone.settings().goHome.value) {
+				returnhome();
+			}
 			cancel();
 			return;
 		}
@@ -589,15 +438,13 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 	}
 
 	private PathingCommand updateGoal() {
-		if (WurstClient.INSTANCE.getHax().autoStoreHack.forced) {
-			return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
-		}
 		boolean legit = Baritone.settings().legitMine.value;
 		List<BlockPos> locs = knownOreLocations;
 		if (!locs.isEmpty()) {
 			CalculationContext context = new CalculationContext(baritone);
 			List<BlockPos> locs2 = prune(context, new ArrayList<>(locs), filter, ORE_LOCATIONS_COUNT, blacklist, droppedItemsScan());
 			// can't reassign locs, gotta make a new var locs2, because we use it in a lambda right here, and variables you use in a lambda must be effectively final
+			locs2.removeIf(pos -> blacklistBlocks.has(ctx.world().getBlockState(pos).getBlock()));
 			Goal goal = new GoalComposite(locs2.stream().map(loc -> coalesce(loc, locs2, context)).toArray(Goal[]::new));
 			knownOreLocations = locs2;
 			return new PathingCommand(goal, legit ? PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH : PathingCommandType.REVALIDATE_GOAL_AND_PATH);

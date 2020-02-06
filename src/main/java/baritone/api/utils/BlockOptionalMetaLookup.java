@@ -20,7 +20,11 @@ import net.minecraft.item.ItemStack;
 public class BlockOptionalMetaLookup {
 
 	private final BlockOptionalMeta[] boms;
-
+	
+    public BlockOptionalMetaLookup() {
+        this.boms = new BlockOptionalMeta[0];
+    }
+    
 	public BlockOptionalMetaLookup(Block... blocks) {
 		boms = Stream.of(blocks).map(BlockOptionalMeta::new).toArray(BlockOptionalMeta[]::new);
 	}

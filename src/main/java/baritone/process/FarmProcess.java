@@ -12,9 +12,12 @@ package baritone.process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import baritone.Baritone;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalBlock;
@@ -23,6 +26,7 @@ import baritone.api.process.IFarmProcess;
 import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.api.utils.BRotationUtils;
+import baritone.api.utils.BlockOptionalMetaLookup;
 import baritone.api.utils.RayTraceUtils;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
@@ -69,6 +73,7 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 				return true;
 			}
 		};
+
 		public final Block block;
 		public final Predicate<BlockState> readyToHarvest;
 
@@ -87,6 +92,8 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 		}
 	}
 
+	private BlockOptionalMetaLookup blacklistBlocks;
+	private static final BlockOptionalMetaLookup FILTER = new BlockOptionalMetaLookup(Arrays.asList(Harvest.values()).stream().map(harvest -> harvest.block).collect(Collectors.toList()));
 	private static final List<Item> FARMLAND_PLANTABLE = Arrays.asList(Items.BEETROOT_SEEDS, Items.MELON_SEEDS, Items.WHEAT_SEEDS, Items.PUMPKIN_SEEDS, Items.POTATO, Items.CARROT);
 	private static final List<Item> PICKUP_DROPPED = Arrays.asList(Items.BEETROOT_SEEDS, Items.BEETROOT, Items.MELON_SEEDS, Items.MELON_SLICE, Blocks.MELON.asItem(), Items.WHEAT_SEEDS, Items.WHEAT, Items.PUMPKIN_SEEDS, Blocks.PUMPKIN.asItem(), Items.POTATO, Items.CARROT, Items.NETHER_WART, Blocks.SUGAR_CANE.asItem(), Blocks.CACTUS.asItem());
 
@@ -95,6 +102,8 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 	private List<BlockPos> locations;
 
 	private int tickCount;
+	private boolean usingChest;
+	private boolean noGoal = false;
 
 	public FarmProcess(Baritone baritone) {
 		super(baritone);
@@ -135,6 +144,40 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 
 	@Override
 	public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+		if (Baritone.settings().checkInventory.value) {
+			Set<Item> validDrops = new HashSet<Item>(PICKUP_DROPPED);
+			boolean invFull = isInventoryFull();
+			blacklistBlocks = new BlockOptionalMetaLookup();
+
+			PathingCommand result = null;
+
+			if (invFull) {
+				Set<ItemStack> notFullStacks = notFullStacks(validDrops);
+				blacklistBlocks = getBlacklistBlocks(notFullStacks, FILTER);
+
+				if (notFullStacks.isEmpty() || noGoal) {
+					result = gotoChest(isSafeToCancel);
+
+					usingChest = result.commandType == PathingCommandType.REQUEST_PAUSE;
+				}
+			}
+			if (usingChest && putInventoryInChest(validDrops)) {
+				ctx.player().closeScreen();
+				if (invFull) {
+					if (Baritone.settings().goHome.value) {
+						returnhome();
+					}
+					onLostControl();
+					logDirect("Inventory and chest are full; no more farming.");
+				}
+				usingChest = false;
+				noGoal = false;
+			}
+
+			if (result != null)
+				return result;
+		}
+
 		ArrayList<Block> scan = new ArrayList<>();
 		for (Harvest harvest : Harvest.values()) {
 			scan.add(harvest.block);
@@ -171,7 +214,9 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 				continue;
 			}
 			if (readyForHarvest(ctx.world(), pos, state)) {
-				toBreak.add(pos);
+				if (!blacklistBlocks.has(ctx.world().getBlockState(pos).getBlock())) {
+					toBreak.add(pos);
+				}
 				continue;
 			}
 			if (state.getBlock() instanceof Fertilizable) {
@@ -224,6 +269,9 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 		if (calcFailed) {
 			logDirect("Farm failed");
 			onLostControl();
+			if (Baritone.settings().goHome.value) {
+				returnhome();
+			}
 			return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
 		}
 
@@ -249,7 +297,7 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 		for (Entity entity : ctx.entities()) {
 			if (entity instanceof ItemEntity && entity.onGround) {
 				ItemEntity ei = (ItemEntity) entity;
-				if (PICKUP_DROPPED.contains(ei.getStack().getItem())) {
+				if (PICKUP_DROPPED.contains(ei.getStack().getItem()) && !blacklistBlocks.has(ei.getStack())) {
 					// +0.1 because of farmland's 0.9375 dummy height lol
 					goalz.add(new GoalBlock(new BlockPos(entity.getX(), entity.getY() + 0.1, entity.getZ())));
 				}
