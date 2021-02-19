@@ -1,4 +1,4 @@
-# Archived due to google prevelance
+# Archived due to google prevalence
 
 This was a personal port with modifications made a while back, there is no reason for you to be building off of this. I am sorry for the confusion. Please see the up to date build here: https://gitlab.com/CDAGaming/fabritone/-/pipelines
 
